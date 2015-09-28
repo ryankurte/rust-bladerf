@@ -14,12 +14,10 @@ pub enum bladerf_backend {
     BLADERF_BACKEND_DUMMY = 100,
 }
 
-pub struct Serial([uint8_t; 33]);
-
 #[repr(C)]
 pub struct bladerf_devinfo {
     pub backend: bladerf_backend,
-    pub serial: Serial,
+    pub serial: [c_char; 33],
     pub usb_bus: uint8_t,            
     pub usb_addr: uint8_t,           
     pub instance: libc::c_uint
@@ -45,10 +43,13 @@ pub fn get_device_list() -> Result<isize, isize> {
 
 		let n = bladerf_get_device_list(&devices) as isize;
 
-		println!("Found {} device(s)", n);
-
 		for i in 0..n {
-			println!("{:?}", (*devices)[i]);
+			//let serial_ptr: *const i8 = (*devices)[0].serial as *const i8;
+			//let serial_string = ffi::CStr::from_ptr(&(*serial_ptr)[0].serial);
+			println!("serial: {}, bus: {}, address: {}", 
+				"fake", //serial_string,
+				(*devices)[i as usize].usb_bus as usize,
+				(*devices)[i as usize].usb_addr as usize);
 		}
 
 		bladerf_free_device_list(devices);
