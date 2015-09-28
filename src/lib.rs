@@ -44,10 +44,10 @@ pub fn get_device_list() -> Result<isize, isize> {
 		let n = bladerf_get_device_list(&devices) as isize;
 
 		for i in 0..n {
-			//let serial_ptr: *const i8 = (*devices)[0].serial as *const i8;
-			//let serial_string = ffi::CStr::from_ptr(&(*serial_ptr)[0].serial);
+			let serial_ptr: *const i8 = &(*devices)[i as usize].serial[0] as *const i8;
+			let serial_string = ffi::CStr::from_ptr(serial_ptr);
 			println!("serial: {}, bus: {}, address: {}", 
-				"fake", //serial_string,
+				str::from_utf8(serial_string.to_bytes()).unwrap(),
 				(*devices)[i as usize].usb_bus as usize,
 				(*devices)[i as usize].usb_addr as usize);
 		}
