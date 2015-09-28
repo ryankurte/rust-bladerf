@@ -14,13 +14,21 @@ pub enum bladerf_backend {
     BLADERF_BACKEND_DUMMY = 100,
 }
 
+pub struct Serial([uint8_t; 33]);
+
 #[repr(C)]
 pub struct bladerf_devinfo {
     pub backend: bladerf_backend,
-    pub serial: [uint8_t; 33],
+    pub serial: Serial,
     pub usb_bus: uint8_t,            
     pub usb_addr: uint8_t,           
     pub instance: libc::c_uint
+}
+
+impl fmt::Debug for bladerf_devinfo {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "serial: UNIMPLEMENTED, bus: {}, address: {})", self.usb_bus, self.usb_addr)
+    }
 }
 
 #[link(name = "bladerf")]
@@ -36,6 +44,12 @@ pub fn get_device_list() -> Result<isize, isize> {
 		let devices: *mut [bladerf_devinfo] = mem::uninitialized();
 
 		let n = bladerf_get_device_list(&devices) as isize;
+
+		println!("Found {} device(s)", n);
+
+		for i in 0..n {
+			println!("{:?}", (*devices)[i]);
+		}
 
 		bladerf_free_device_list(devices);
 
