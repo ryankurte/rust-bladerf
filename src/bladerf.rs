@@ -3,21 +3,26 @@
 extern crate libc;
 
 use libc::*;
-use std::*;
 
 pub enum Struct_bladerf { }
-pub type Enum_Unnamed1 = ::libc::c_uint;
-pub const BLADERF_BACKEND_ANY: ::libc::c_uint = 0;
-pub const BLADERF_BACKEND_LINUX: ::libc::c_uint = 1;
-pub const BLADERF_BACKEND_LIBUSB: ::libc::c_uint = 2;
-pub const BLADERF_BACKEND_CYPRESS: ::libc::c_uint = 3;
-pub const BLADERF_BACKEND_DUMMY: ::libc::c_uint = 100;
-pub type bladerf_backend = Enum_Unnamed1;
-pub type Enum_Unnamed2 = ::libc::c_uint;
-pub const BLADERF_DEVICE_SPEED_UNKNOWN: ::libc::c_uint = 0;
-pub const BLADERF_DEVICE_SPEED_HIGH: ::libc::c_uint = 1;
-pub const BLADERF_DEVICE_SPEED_SUPER: ::libc::c_uint = 2;
-pub type bladerf_dev_speed = Enum_Unnamed2;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub enum bladerf_backend {
+    BLADERF_BACKEND_ANY = 0,    
+    BLADERF_BACKEND_LINUX = 1,  
+    BLADERF_BACKEND_LIBUSB = 2, 
+    BLADERF_BACKEND_CYPRESS = 3, 
+    BLADERF_BACKEND_DUMMY = 100,
+}
+
+#[repr(C)]
+pub enum bladerf_dev_speed {
+    BLADERF_DEVICE_SPEED_UNKNOWN = 0,
+    BLADERF_DEVICE_SPEED_HIGH = 1,
+    BLADERF_DEVICE_SPEED_SUPER = 2,
+}
+
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_bladerf_devinfo {
@@ -33,22 +38,27 @@ impl ::std::clone::Clone for Struct_bladerf_devinfo {
 impl ::std::default::Default for Struct_bladerf_devinfo {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type Enum_Unnamed3 = ::libc::c_int;
-pub const BLADERF_TUNING_MODE_INVALID: ::libc::c_int = -1;
-pub const BLADERF_TUNING_MODE_HOST: ::libc::c_int = 0;
-pub const BLADERF_TUNING_MODE_FPGA: ::libc::c_int = 1;
-pub type bladerf_tuning_mode = Enum_Unnamed3;
-pub type Enum_Unnamed4 = ::libc::c_uint;
-pub const BLADERF_LB_FIRMWARE: ::libc::c_uint = 1;
-pub const BLADERF_LB_BB_TXLPF_RXVGA2: ::libc::c_uint = 2;
-pub const BLADERF_LB_BB_TXVGA1_RXVGA2: ::libc::c_uint = 3;
-pub const BLADERF_LB_BB_TXLPF_RXLPF: ::libc::c_uint = 4;
-pub const BLADERF_LB_BB_TXVGA1_RXLPF: ::libc::c_uint = 5;
-pub const BLADERF_LB_RF_LNA1: ::libc::c_uint = 6;
-pub const BLADERF_LB_RF_LNA2: ::libc::c_uint = 7;
-pub const BLADERF_LB_RF_LNA3: ::libc::c_uint = 8;
-pub const BLADERF_LB_NONE: ::libc::c_uint = 9;
-pub type bladerf_loopback = Enum_Unnamed4;
+
+#[repr(C)]
+pub enum bladerf_tuning_mode {
+    BLADERF_TUNING_MODE_INVALID = -1,
+    BLADERF_TUNING_MODE_HOST = 0,
+    BLADERF_TUNING_MODE_FPGA = 1,
+}
+
+#[repr(C)]
+pub enum bladerf_loopback {
+    BLADERF_LB_FIRMWARE = 1,
+    BLADERF_LB_BB_TXLPF_RXVGA2 = 2,
+    BLADERF_LB_BB_TXVGA1_RXVGA2 = 3,
+    BLADERF_LB_BB_TXLPF_RXLPF = 4,
+    BLADERF_LB_BB_TXVGA1_RXLPF = 5,
+    BLADERF_LB_RF_LNA1 = 6,
+    BLADERF_LB_RF_LNA2 = 7,
+    BLADERF_LB_RF_LNA3 = 8,
+    BLADERF_LB_NONE = 9,
+}
+
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_bladerf_rational_rate {
@@ -62,43 +72,58 @@ impl ::std::clone::Clone for Struct_bladerf_rational_rate {
 impl ::std::default::Default for Struct_bladerf_rational_rate {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type Enum_Unnamed5 = ::libc::c_uint;
-pub const BLADERF_SAMPLING_UNKNOWN: ::libc::c_uint = 0;
-pub const BLADERF_SAMPLING_INTERNAL: ::libc::c_uint = 1;
-pub const BLADERF_SAMPLING_EXTERNAL: ::libc::c_uint = 2;
-pub type bladerf_sampling = Enum_Unnamed5;
-pub type Enum_Unnamed6 = ::libc::c_uint;
-pub const BLADERF_LNA_GAIN_UNKNOWN: ::libc::c_uint = 0;
-pub const BLADERF_LNA_GAIN_BYPASS: ::libc::c_uint = 1;
-pub const BLADERF_LNA_GAIN_MID: ::libc::c_uint = 2;
-pub const BLADERF_LNA_GAIN_MAX: ::libc::c_uint = 3;
-pub type bladerf_lna_gain = Enum_Unnamed6;
-pub type Enum_Unnamed7 = ::libc::c_uint;
-pub const BLADERF_LPF_NORMAL: ::libc::c_uint = 0;
-pub const BLADERF_LPF_BYPASSED: ::libc::c_uint = 1;
-pub const BLADERF_LPF_DISABLED: ::libc::c_uint = 2;
-pub type bladerf_lpf_mode = Enum_Unnamed7;
-pub type Enum_Unnamed8 = ::libc::c_uint;
-pub const BLADERF_MODULE_RX: ::libc::c_uint = 0;
-pub const BLADERF_MODULE_TX: ::libc::c_uint = 1;
-pub type bladerf_module = Enum_Unnamed8;
-pub type Enum_Unnamed9 = ::libc::c_uint;
-pub const BLADERF_XB_NONE: ::libc::c_uint = 0;
-pub const BLADERF_XB_100: ::libc::c_uint = 1;
-pub const BLADERF_XB_200: ::libc::c_uint = 2;
-pub type bladerf_xb = Enum_Unnamed9;
-pub type Enum_Unnamed10 = ::libc::c_uint;
-pub const BLADERF_XB200_50M: ::libc::c_uint = 0;
-pub const BLADERF_XB200_144M: ::libc::c_uint = 1;
-pub const BLADERF_XB200_222M: ::libc::c_uint = 2;
-pub const BLADERF_XB200_CUSTOM: ::libc::c_uint = 3;
-pub const BLADERF_XB200_AUTO_1DB: ::libc::c_uint = 4;
-pub const BLADERF_XB200_AUTO_3DB: ::libc::c_uint = 5;
-pub type bladerf_xb200_filter = Enum_Unnamed10;
-pub type Enum_Unnamed11 = ::libc::c_uint;
-pub const BLADERF_XB200_BYPASS: ::libc::c_uint = 0;
-pub const BLADERF_XB200_MIX: ::libc::c_uint = 1;
-pub type bladerf_xb200_path = Enum_Unnamed11;
+
+#[repr(C)]
+pub enum bladerf_sampling {
+    BLADERF_SAMPLING_UNKNOWN = 0,
+    BLADERF_SAMPLING_INTERNAL = 1,
+    BLADERF_SAMPLING_EXTERNAL = 2,
+}
+
+#[repr(C)]
+pub enum bladerf_lna_gain {
+    BLADERF_LNA_GAIN_UNKNOWN = 0,
+    BLADERF_LNA_GAIN_BYPASS = 1,
+    BLADERF_LNA_GAIN_MID = 2,
+    BLADERF_LNA_GAIN_MAX = 3,
+}
+
+#[repr(C)]
+pub enum bladerf_lpf_mode {
+    BLADERF_LPF_NORMAL = 0,
+    BLADERF_LPF_BYPASSED = 1,
+    BLADERF_LPF_DISABLED = 2,
+}
+
+#[repr(C)]
+pub enum bladerf_module {
+    BLADERF_MODULE_RX = 0,
+    BLADERF_MODULE_TX = 1,
+}
+
+#[repr(C)]
+pub enum bladerf_xb {
+    BLADERF_XB_NONE = 0,
+    BLADERF_XB_100 = 1,
+    BLADERF_XB_200 = 2,
+}
+
+#[repr(C)]
+pub enum bladerf_xb200_filter {
+    BLADERF_XB200_50M = 0,
+    BLADERF_XB200_144M = 1,
+    BLADERF_XB200_222M = 2,
+    BLADERF_XB200_CUSTOM = 3,
+    BLADERF_XB200_AUTO_1DB = 4,
+    BLADERF_XB200_AUTO_3DB = 5,
+}
+
+#[repr(C)]
+pub enum bladerf_xb200_path {
+    BLADERF_XB200_BYPASS = 0,
+    BLADERF_XB200_MIX = 1,
+}
+
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_bladerf_quick_tune {
@@ -114,22 +139,29 @@ impl ::std::clone::Clone for Struct_bladerf_quick_tune {
 impl ::std::default::Default for Struct_bladerf_quick_tune {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type Enum_Unnamed12 = ::libc::c_uint;
-pub const BLADERF_DC_CAL_LPF_TUNING: ::libc::c_uint = 0;
-pub const BLADERF_DC_CAL_TX_LPF: ::libc::c_uint = 1;
-pub const BLADERF_DC_CAL_RX_LPF: ::libc::c_uint = 2;
-pub const BLADERF_DC_CAL_RXVGA2: ::libc::c_uint = 3;
-pub type bladerf_cal_module = Enum_Unnamed12;
-pub type Enum_Unnamed13 = ::libc::c_uint;
-pub const BLADERF_CORR_LMS_DCOFF_I: ::libc::c_uint = 0;
-pub const BLADERF_CORR_LMS_DCOFF_Q: ::libc::c_uint = 1;
-pub const BLADERF_CORR_FPGA_PHASE: ::libc::c_uint = 2;
-pub const BLADERF_CORR_FPGA_GAIN: ::libc::c_uint = 3;
-pub type bladerf_correction = Enum_Unnamed13;
-pub type Enum_Unnamed14 = ::libc::c_uint;
-pub const BLADERF_FORMAT_SC16_Q11: ::libc::c_uint = 0;
-pub const BLADERF_FORMAT_SC16_Q11_META: ::libc::c_uint = 1;
-pub type bladerf_format = Enum_Unnamed14;
+
+#[repr(C)]
+pub enum bladerf_cal_module {
+    BLADERF_DC_CAL_LPF_TUNING = 0,
+    BLADERF_DC_CAL_TX_LPF = 1,
+    BLADERF_DC_CAL_RX_LPF = 2,
+    BLADERF_DC_CAL_RXVGA2 = 3,
+}
+
+#[repr(C)]
+pub enum bladerf_correction {
+    BLADERF_CORR_LMS_DCOFF_I = 0,
+    BLADERF_CORR_LMS_DCOFF_Q = 1,
+    BLADERF_CORR_FPGA_PHASE = 2,
+    BLADERF_CORR_FPGA_GAIN = 3,
+}
+
+#[repr(C)]
+pub enum bladerf_format {
+    BLADERF_FORMAT_SC16_Q11 = 0,
+    BLADERF_FORMAT_SC16_Q11_META = 1,
+}
+
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_bladerf_metadata {
@@ -145,6 +177,7 @@ impl ::std::clone::Clone for Struct_bladerf_metadata {
 impl ::std::default::Default for Struct_bladerf_metadata {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
+
 pub enum Struct_bladerf_stream { }
 pub type bladerf_stream_cb =
     ::std::option::Option<extern "C" fn(dev: *mut Struct_bladerf,
@@ -154,6 +187,7 @@ pub type bladerf_stream_cb =
                                         num_samples: size_t,
                                         user_data: *mut ::libc::c_void)
                               -> *mut ::libc::c_void>;
+
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_bladerf_version {
@@ -168,32 +202,40 @@ impl ::std::clone::Clone for Struct_bladerf_version {
 impl ::std::default::Default for Struct_bladerf_version {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type Enum_Unnamed15 = ::libc::c_uint;
-pub const BLADERF_FPGA_UNKNOWN: ::libc::c_uint = 0;
-pub const BLADERF_FPGA_40KLE: ::libc::c_uint = 40;
-pub const BLADERF_FPGA_115KLE: ::libc::c_uint = 115;
-pub type bladerf_fpga_size = Enum_Unnamed15;
-pub type Enum_Unnamed16 = ::libc::c_uint;
-pub const BLADERF_LOG_LEVEL_VERBOSE: ::libc::c_uint = 0;
-pub const BLADERF_LOG_LEVEL_DEBUG: ::libc::c_uint = 1;
-pub const BLADERF_LOG_LEVEL_INFO: ::libc::c_uint = 2;
-pub const BLADERF_LOG_LEVEL_WARNING: ::libc::c_uint = 3;
-pub const BLADERF_LOG_LEVEL_ERROR: ::libc::c_uint = 4;
-pub const BLADERF_LOG_LEVEL_CRITICAL: ::libc::c_uint = 5;
-pub const BLADERF_LOG_LEVEL_SILENT: ::libc::c_uint = 6;
-pub type bladerf_log_level = Enum_Unnamed16;
-pub type Enum_Unnamed17 = ::libc::c_int;
-pub const BLADERF_IMAGE_TYPE_INVALID: ::libc::c_int = -1;
-pub const BLADERF_IMAGE_TYPE_RAW: ::libc::c_int = 0;
-pub const BLADERF_IMAGE_TYPE_FIRMWARE: ::libc::c_int = 1;
-pub const BLADERF_IMAGE_TYPE_FPGA_40KLE: ::libc::c_int = 2;
-pub const BLADERF_IMAGE_TYPE_FPGA_115KLE: ::libc::c_int = 3;
-pub const BLADERF_IMAGE_TYPE_CALIBRATION: ::libc::c_int = 4;
-pub const BLADERF_IMAGE_TYPE_RX_DC_CAL: ::libc::c_int = 5;
-pub const BLADERF_IMAGE_TYPE_TX_DC_CAL: ::libc::c_int = 6;
-pub const BLADERF_IMAGE_TYPE_RX_IQ_CAL: ::libc::c_int = 7;
-pub const BLADERF_IMAGE_TYPE_TX_IQ_CAL: ::libc::c_int = 8;
-pub type bladerf_image_type = Enum_Unnamed17;
+
+#[repr(C)]
+pub enum bladerf_fpga_size {
+    BLADERF_FPGA_UNKNOWN = 0,
+    BLADERF_FPGA_40KLE = 40,
+    BLADERF_FPGA_115KLE = 115,
+}
+
+#[repr(C)]
+pub enum bladerf_log_level {
+    BLADERF_LOG_LEVEL_VERBOSE = 0,
+    BLADERF_LOG_LEVEL_DEBUG = 1,
+    BLADERF_LOG_LEVEL_INFO = 2,
+    BLADERF_LOG_LEVEL_WARNING = 3,
+    BLADERF_LOG_LEVEL_ERROR = 4,
+    BLADERF_LOG_LEVEL_CRITICAL = 5,
+    BLADERF_LOG_LEVEL_SILENT = 6,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub enum bladerf_image_type {
+    BLADERF_IMAGE_TYPE_INVALID= -1,
+    BLADERF_IMAGE_TYPE_RAW = 0,
+    BLADERF_IMAGE_TYPE_FIRMWARE = 1,
+    BLADERF_IMAGE_TYPE_FPGA_40KLE = 2,
+    BLADERF_IMAGE_TYPE_FPGA_115KLE = 3,
+    BLADERF_IMAGE_TYPE_CALIBRATION = 4,
+    BLADERF_IMAGE_TYPE_RX_DC_CAL = 5,
+    BLADERF_IMAGE_TYPE_TX_DC_CAL = 6,
+    BLADERF_IMAGE_TYPE_RX_IQ_CAL = 7,
+    BLADERF_IMAGE_TYPE_TX_IQ_CAL = 8,
+}
+
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_bladerf_image {
@@ -214,6 +256,7 @@ impl ::std::clone::Clone for Struct_bladerf_image {
 impl ::std::default::Default for Struct_bladerf_image {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
+
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_bladerf_lms_dc_cals {
@@ -234,6 +277,7 @@ impl ::std::clone::Clone for Struct_bladerf_lms_dc_cals {
 impl ::std::default::Default for Struct_bladerf_lms_dc_cals {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
+
 #[link(name = "bladerf")]
 extern "C" {
     pub fn bladerf_get_device_list(devices: &*mut [Struct_bladerf_devinfo]) 
