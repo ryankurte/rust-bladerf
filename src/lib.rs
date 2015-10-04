@@ -52,6 +52,26 @@ pub fn set_usb_reset_on_open(enabled: bool) {
     } 
 }
 
+pub fn open_with_devinfo(devinfo: *mut Struct_bladerf_devinfo) -> Result<isize, isize> {
+	unsafe {
+		let device: *mut *mut Struct_bladerf = mem::uninitialized();
+
+		let res = bladerf_open_with_devinfo(device, devinfo) as isize;
+
+		if res >= 0 {
+			Ok(res)
+		} else {
+			Err(res)
+		}
+	}
+}
+
+pub fn close_device(device: *mut Struct_bladerf) {
+	unsafe {
+		bladerf_close(device)
+	}
+}
+
 #[test]
 fn discovery() {
 	match get_device_list() {
