@@ -7,11 +7,11 @@ use libc::*;
 mod bladerf;
 use bladerf::*;
 
-impl fmt::Debug for Struct_bladerf_devinfo {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "serial: UNIMPLEMENTED, bus: {}, address: {})", self.usb_bus, self.usb_addr)
-    }
-}
+//impl fmt::Display for Struct_bladerf_devinfo {
+//    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//        write!(f, "serial: UNIMPLEMENTED, bus: {}, address: {})", self.usb_bus, self.usb_addr)
+//    }
+//}
 
 //#[link(name = "bladerf")]
 //extern {
@@ -29,15 +29,16 @@ pub fn get_device_list() -> Result<Vec<Struct_bladerf_devinfo>, isize> {
 
 		let mut safe_device_list: Vec<Struct_bladerf_devinfo> = Vec::new();
 
-		for i in 0..n {
-			let local_device = (*devices)[i as usize];
-			//Safe if this is a copy, unsafe if it is not?
-			safe_device_list.push(local_device);
-		}
-
-		bladerf_free_device_list(devices);
-
 		if n >= 0 {
+
+			for i in 0..n {
+				println!("iterator: {}", i);
+				let local_device = (*devices)[i as usize];
+				//Safe if this is a copy, unsafe if it is not?
+				safe_device_list.push(local_device);
+			}
+			bladerf_free_device_list(devices);
+			
 			Ok(safe_device_list)
 		} else {
 			Err(n)
@@ -51,25 +52,27 @@ pub fn set_usb_reset_on_open(enabled: bool) {
     } 
 }
 
-pub fn open_with_devinfo(devinfo: &Struct_bladerf_devinfo) -> Result<isize, isize> {
+pub fn open_with_devinfo(devinfo: &Struct_bladerf_devinfo) -> Result<*mut Struct_bladerf, isize> {
 	unsafe {
-		let device: *mut *mut Struct_bladerf = mem::uninitialized();
+		let device_ptr: *mut Struct_bladerf = mem::uninitialized();
+		let device_ptr_ptr: *mut *mut Struct_bladerf = device_ptr as *mut *mut Struct_bladerf;
 		let unsafe_devinfo: *const Struct_bladerf_devinfo = devinfo as *const Struct_bladerf_devinfo;
 
-		let res = bladerf_open_with_devinfo(device, unsafe_devinfo) as isize;
+		let res = bladerf_open_with_devinfo(device_ptr_ptr, unsafe_devinfo) as isize;
 
 		if res >= 0 {
-			Ok(res)
+			Ok(device_ptr)
 		} else {
 			Err(res)
 		}
 	}
 }
 
-pub fn fw_version(dev: *mut Struct_bladerf) -> Result<*mut Struct_bladerf_version, isize> {
+pub fn fw_version(dev: *mut Struct_bladerf) -> Result<Struct_bladerf_version, isize> {
 	unsafe {
-		let version: *mut Struct_bladerf_version = mem::uninitialized();;
-		let res = bladerf_fw_version(dev, version) as isize;
+		let mut version: Struct_bladerf_version = mem::uninitialized();
+
+		let res = bladerf_fw_version(dev, &mut version as *mut Struct_bladerf_version) as isize;
 
 		if res >= 0 {
 			Ok(version)
@@ -79,11 +82,11 @@ pub fn fw_version(dev: *mut Struct_bladerf) -> Result<*mut Struct_bladerf_versio
 	}
 }
 
-
-pub fn fpga_version(dev: *mut Struct_bladerf) -> Result<*mut Struct_bladerf_version, isize> {
+pub fn fpga_version(dev: *mut Struct_bladerf) -> Result<Struct_bladerf_version, isize> {
 	unsafe {
-		let version: *mut Struct_bladerf_version = mem::uninitialized();;
-		let res = bladerf_fpga_version(dev, version) as isize;
+		let mut version: Struct_bladerf_version = mem::uninitialized();
+
+		let res = bladerf_fpga_version(dev, &mut version as *mut Struct_bladerf_version) as isize;
 
 		if res >= 0 {
 			Ok(version)
@@ -103,11 +106,35 @@ pub fn close_device(device: *mut Struct_bladerf) {
 fn discovery() {
 	match get_device_list() {
 		Ok(devices) => {
-			println!("Discovered {} devices", devices);
+			println!("Discovered {:?} devices", devices.len());
 		},
 		Err(code) => {
-			println!("Error {} listing devices", code);
+			println!("Error {:?} listing devices", code);
 			assert!(false);
 		}
 	}
 }
+
+#[test]
+fn connection() {
+	match get_device_list() {
+		Ok(devices) => {
+			assert!(devices.len() == 1);
+			match(open_with_devinfo(&devices[0])) {
+				Ok(dev) => {
+					println!("Device opened");
+				},
+				Err(code) => {
+					println!("Error {:?} opening device", code);
+			assert!(false);
+				}
+			}
+		},
+		Err(code) => {
+			println!("Error {:?} listing devices", code);
+			assert!(false);
+		}
+	}
+	
+}
+

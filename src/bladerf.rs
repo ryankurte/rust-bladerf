@@ -7,7 +7,7 @@ use libc::*;
 pub enum Struct_bladerf { }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum bladerf_backend {
     BLADERF_BACKEND_ANY = 0,    
     BLADERF_BACKEND_LINUX = 1,  
