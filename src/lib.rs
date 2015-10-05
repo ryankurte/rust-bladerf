@@ -120,9 +120,11 @@ fn connection() {
 	match get_device_list() {
 		Ok(devices) => {
 			assert!(devices.len() == 1);
-			match(open_with_devinfo(&devices[0])) {
+			match open_with_devinfo(&devices[0]) {
 				Ok(dev) => {
 					println!("Device opened");
+					close_device(dev);
+					println!("Device closed");
 				},
 				Err(code) => {
 					println!("Error {:?} opening device", code);
