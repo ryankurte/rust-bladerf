@@ -189,7 +189,7 @@ pub type bladerf_stream_cb =
                               -> *mut ::libc::c_void>;
 
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Copy, Debug)]
 pub struct Struct_bladerf_version {
     pub major: uint16_t,
     pub minor: uint16_t,

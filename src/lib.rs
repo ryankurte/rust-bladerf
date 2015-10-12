@@ -7,6 +7,10 @@ use libc::*;
 mod bladerf;
 use bladerf::*;
 
+pub struct BladerfDevice {
+    pub device: *mut *mut Struct_bladerf,
+}
+
 //impl fmt::Display for Struct_bladerf_devinfo {
 //    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 //        write!(f, "serial: UNIMPLEMENTED, bus: {}, address: {})", self.usb_bus, self.usb_addr)
@@ -115,25 +119,22 @@ fn discovery() {
 	}
 }
 
+fn firmware_test() -> Result<Struct_bladerf_version, isize> {
+	let devices = try!(get_device_list());
+	let device = try!(open_with_devinfo(&devices[0]));
+	let version = try!(fw_version(device));
+	close_device(device);
+	return Ok(version);
+}
+
 #[test]
 fn connection() {
-	match get_device_list() {
-		Ok(devices) => {
-			assert!(devices.len() == 1);
-			match open_with_devinfo(&devices[0]) {
-				Ok(dev) => {
-					println!("Device opened");
-					close_device(dev);
-					println!("Device closed");
-				},
-				Err(code) => {
-					println!("Error {:?} opening device", code);
-			assert!(false);
-				}
-			}
+	match firmware_test() {
+		Ok(version) => {
+			println!("Version {:?}", version);
 		},
 		Err(code) => {
-			println!("Error {:?} listing devices", code);
+			println!("Error {:?} connecting to device", code);
 			assert!(false);
 		}
 	}
