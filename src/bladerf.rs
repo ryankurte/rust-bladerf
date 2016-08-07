@@ -278,13 +278,13 @@ impl ::std::default::Default for Struct_bladerf_lms_dc_cals {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 
-#[link(name = "bladerf")]
+#[link(name = "bladeRF")]
 extern "C" {
-    pub fn bladerf_get_device_list(devices: &*mut [Struct_bladerf_devinfo]) 
+    pub fn bladerf_get_device_list(devices: &*mut Struct_bladerf_devinfo) 
     -> libc::c_int;
-    pub fn bladerf_free_device_list(devices: *mut [Struct_bladerf_devinfo])
+    pub fn bladerf_free_device_list(devices: *mut Struct_bladerf_devinfo)
     -> ();
-    pub fn bladerf_open_with_devinfo(device: *mut *mut Struct_bladerf,
+    pub fn bladerf_open_with_devinfo(device: &*mut Struct_bladerf,
                                      devinfo: *const Struct_bladerf_devinfo)
      -> ::libc::c_int;
     pub fn bladerf_open(device: *mut *mut Struct_bladerf,

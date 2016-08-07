@@ -27,24 +27,30 @@ pub struct BladerfDevice {
 pub fn get_device_list() -> Result<Vec<Struct_bladerf_devinfo>, isize> {
 
 	unsafe{ 
-		let devices: *mut [Struct_bladerf_devinfo] = mem::uninitialized();
+		let devices: *mut Struct_bladerf_devinfo = mem::uninitialized();
 
 		let n = bladerf_get_device_list(&devices) as isize;
 
-		let mut safe_device_list: Vec<Struct_bladerf_devinfo> = Vec::new();
-
+		// Catch bladerf function errors
 		if n >= 0 {
+
+			// Cast array to slice and create a safe array to return
+			let device_slice = std::slice::from_raw_parts(devices, n as usize);
+			let mut safe_device_list: Vec<Struct_bladerf_devinfo> = Vec::new();
 
 			for i in 0..n {
 				println!("iterator: {}", i);
-				let local_device = (*devices)[i as usize];
+				let local_device = device_slice[i as usize];
 				//Safe if this is a copy, unsafe if it is not?
 				safe_device_list.push(local_device);
 			}
 			bladerf_free_device_list(devices);
 			
+			// Return rust save device info array
 			Ok(safe_device_list)
+
 		} else {
+			// Return error code
 			Err(n)
 		}
 	}
@@ -59,10 +65,9 @@ pub fn set_usb_reset_on_open(enabled: bool) {
 pub fn open_with_devinfo(devinfo: &Struct_bladerf_devinfo) -> Result<*mut Struct_bladerf, isize> {
 	unsafe {
 		let device_ptr: *mut Struct_bladerf = mem::uninitialized();
-		let device_ptr_ptr: *mut *mut Struct_bladerf = device_ptr as *mut *mut Struct_bladerf;
 		let unsafe_devinfo: *const Struct_bladerf_devinfo = devinfo as *const Struct_bladerf_devinfo;
 
-		let res = bladerf_open_with_devinfo(device_ptr_ptr, unsafe_devinfo) as isize;
+		let res = bladerf_open_with_devinfo(&device_ptr, unsafe_devinfo) as isize;
 
 		if res >= 0 {
 			Ok(device_ptr)
