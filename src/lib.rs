@@ -17,13 +17,6 @@ pub struct BladerfDevice {
 //    }
 //}
 
-//#[link(name = "bladerf")]
-//extern {
-//	fn bladerf_get_device_list(devices: &*mut [Struct_bladerf_devinfo]) -> libc::c_int;
-//	fn bladerf_free_device_list(devices: *mut [Struct_bladerf_devinfo]);
-//    fn bladerf_set_usb_reset_on_open (enabled: bool);
-//}
-
 pub fn get_device_list() -> Result<Vec<Struct_bladerf_devinfo>, isize> {
 
 	unsafe{ 
@@ -32,14 +25,13 @@ pub fn get_device_list() -> Result<Vec<Struct_bladerf_devinfo>, isize> {
 		let n = bladerf_get_device_list(&devices) as isize;
 
 		// Catch bladerf function errors
-		if n >= 0 {
+		if n > 0 {
 
 			// Cast array to slice and create a safe array to return
 			let device_slice = std::slice::from_raw_parts(devices, n as usize);
 			let mut safe_device_list: Vec<Struct_bladerf_devinfo> = Vec::new();
 
 			for i in 0..n {
-				println!("iterator: {}", i);
 				let local_device = device_slice[i as usize];
 				//Safe if this is a copy, unsafe if it is not?
 				safe_device_list.push(local_device);
@@ -105,44 +97,68 @@ pub fn fpga_version(dev: *mut Struct_bladerf) -> Result<Struct_bladerf_version, 
 	}
 }
 
+pub fn get_serial(dev: *mut Struct_bladerf) -> Result<String, isize> {
+	unsafe {
+		let serial_data : Vec<::libc::c_char> = vec![0, 33];
+
+		let res = bladerf_get_serial(dev, serial_data.as_ptr()) as isize;
+		
+		println!("Serial: {:?}", serial_data);
+
+		let serial_u8: Vec<u8>= serial_data.iter().map(|&x| x as u8).collect();
+		let serial_cstr = ffi::CString::from_vec_unchecked(serial_u8);
+		let serial_str = serial_cstr.into_string().unwrap();
+
+		if res >= 0 {
+			Ok(serial_str)
+		} else {
+			Err(res as isize)
+		}
+	}
+}
+
 pub fn close_device(device: *mut Struct_bladerf) {
 	unsafe {
 		bladerf_close(device)
 	}
 }
 
-#[test]
-fn discovery() {
-	match get_device_list() {
-		Ok(devices) => {
-			println!("Discovered {:?} devices", devices.len());
-		},
-		Err(code) => {
-			println!("Error {:?} listing devices", code);
-			assert!(false);
+
+#[cfg(test)]
+mod tests {
+
+	#[test]
+	fn list_devices() {
+		match super::get_device_list() {
+			Ok(devices) => {
+				println!("Discovered {:?} devices", devices.len());
+			},
+			Err(code) => {
+				println!("Error {:?} listing devices", code);
+				assert!(false);
+			}
 		}
 	}
-}
 
-fn firmware_test() -> Result<Struct_bladerf_version, isize> {
-	let devices = try!(get_device_list());
-	let device = try!(open_with_devinfo(&devices[0]));
-	let version = try!(fw_version(device));
-	close_device(device);
-	return Ok(version);
-}
-
-#[test]
-fn connection() {
-	match firmware_test() {
-		Ok(version) => {
-			println!("Version {:?}", version);
-		},
-		Err(code) => {
-			println!("Error {:?} connecting to device", code);
-			assert!(false);
-		}
+	#[test]
+	fn get_version() {
+		let devices = super::get_device_list().unwrap();
+		assert!(devices.len() != 0);
+		let device = super::open_with_devinfo(&devices[0]).unwrap();
+		let version = super::fw_version(device).unwrap();
+		println!("Version {:?}", version);
+		super::close_device(device);
 	}
-	
-}
 
+	#[test]
+	fn get_serial() {
+		let devices = super::get_device_list().unwrap();
+		assert!(devices.len() != 0);
+		let device = super::open_with_devinfo(&devices[0]).unwrap();
+		let serial = super::get_serial(device).unwrap();
+		println!("Serial: {:?}", serial);
+		assert!(serial.len() == 32);
+		super::close_device(device);
+	}
+
+}

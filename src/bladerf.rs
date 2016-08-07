@@ -470,7 +470,7 @@ extern "C" {
                            metadata: *mut Struct_bladerf_metadata,
                            timeout_ms: ::libc::c_uint) -> ::libc::c_int;
     pub fn bladerf_get_serial(dev: *mut Struct_bladerf,
-                              serial: *mut ::libc::c_char) -> ::libc::c_int;
+                              serial: *const ::libc::c_char) -> ::libc::c_int;
     pub fn bladerf_get_vctcxo_trim(dev: *mut Struct_bladerf,
                                    trim: *mut uint16_t) -> ::libc::c_int;
     pub fn bladerf_get_fpga_size(dev: *mut Struct_bladerf,
