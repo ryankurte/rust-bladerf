@@ -1,7 +1,10 @@
 [package]
 name = "bladerf"
 version = "0.1.0"
+repository = "https://github.com/ryankurte/rust-bladerf"
 authors = ["Ryan Kurte <ryankurte@gmail.com>"]
+description = "WIP Rust wrapper for libbladerf"
+license = "MIT"
 
 [dependencies]
 libc = "0.1.10"
