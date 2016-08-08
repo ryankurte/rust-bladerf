@@ -99,17 +99,20 @@ pub fn fpga_version(dev: *mut Struct_bladerf) -> Result<Struct_bladerf_version, 
 
 pub fn get_serial(dev: *mut Struct_bladerf) -> Result<String, isize> {
 	unsafe {
-		let serial_data : Vec<::libc::c_char> = vec![0, 33];
+		// Create raw data array for serial return
+		let serial_data : Vec<::libc::c_char> = vec![0; 33];
 
+		// Call underlying c method
 		let res = bladerf_get_serial(dev, serial_data.as_ptr()) as isize;
-		
-		println!("Serial: {:?}", serial_data);
-
-		let serial_u8: Vec<u8>= serial_data.iter().map(|&x| x as u8).collect();
-		let serial_cstr = ffi::CString::from_vec_unchecked(serial_u8);
-		let serial_str = serial_cstr.into_string().unwrap();
 
 		if res >= 0 {
+			// Map ::libc::c_char back to u8 as required for string manipulation
+			let serial_u8: Vec<u8>= serial_data.iter().map(|&x| x as u8).collect();
+
+			// Build String
+			let serial_cstr = ffi::CString::from_vec_unchecked(serial_u8);
+			let serial_str = serial_cstr.into_string().unwrap();
+
 			Ok(serial_str)
 		} else {
 			Err(res as isize)
@@ -157,7 +160,7 @@ mod tests {
 		let device = super::open_with_devinfo(&devices[0]).unwrap();
 		let serial = super::get_serial(device).unwrap();
 		println!("Serial: {:?}", serial);
-		assert!(serial.len() == 32);
+		assert!(serial.len() == 33);
 		super::close_device(device);
 	}
 
