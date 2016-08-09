@@ -86,7 +86,7 @@ pub fn open_with_devinfo(devinfo: &Struct_bladerf_devinfo) -> Result<BladeRFDevi
 	unsafe {
 		let bladerf_device = BladeRFDevice { device: mem::uninitialized() };
 
-		let res = bladerf_open_with_devinfo(&(bladerf_device.device), devinfo_ptr) as isize;
+		let res = bladerf_open_with_devinfo(&(bladerf_device.device), devinfo_ptr);
 
 		handle_res!(res, bladerf_device);
 	}
@@ -98,7 +98,7 @@ impl BladeRFDevice {
 		unsafe {
 			let mut version: Struct_bladerf_version = mem::uninitialized();
 
-			let res = bladerf_fw_version(self.device, &mut version as *mut Struct_bladerf_version) as isize;
+			let res = bladerf_fw_version(self.device, &mut version as *mut Struct_bladerf_version);
 
 			handle_res!(res, version);
 		}
@@ -108,7 +108,7 @@ impl BladeRFDevice {
 		unsafe {
 			let mut version: Struct_bladerf_version = mem::uninitialized();
 
-			let res = bladerf_fpga_version(self.device, &mut version as *mut Struct_bladerf_version) as isize;
+			let res = bladerf_fpga_version(self.device, &mut version as *mut Struct_bladerf_version);
 
 			handle_res!(res, version);
 		}
@@ -120,7 +120,7 @@ impl BladeRFDevice {
 			let serial_data : Vec<::libc::c_char> = vec![0; 33];
 
 			// Call underlying c method
-			let res = bladerf_get_serial(self.device, serial_data.as_ptr()) as isize;
+			let res = bladerf_get_serial(self.device, serial_data.as_ptr());
 
 			if res >= 0 {
 				// Map ::libc::c_char back to u8 as required for string manipulation
@@ -161,13 +161,13 @@ impl BladeRFDevice {
 		}
 	}
 
-	pub fn load_fpga(&self, file: String) {
-
+	pub fn load_fpga(&self, file: String) -> Result<isize, isize>  {
+		let c_string = ffi::CString::new(file.into_bytes()).unwrap();
 
 		unsafe {
-			//let res = bladerf_load_fpga(self.device, );
+			let res = bladerf_load_fpga(self.device, c_string.as_ptr());
 
-			//handle_res!(res);
+			handle_res!(res)
 		}
 	}
 
@@ -181,7 +181,7 @@ impl BladeRFDevice {
 
 	pub fn enable_module(&self, module: bladerf_module, enable: bool) -> Result<isize, isize> {
 		unsafe {
-			let res = bladerf_enable_module(self.device, module, enable as u8) as isize;
+			let res = bladerf_enable_module(self.device, module, enable as u8);
 
 			handle_res!(res);
 		}
@@ -189,7 +189,7 @@ impl BladeRFDevice {
 
 	pub fn set_loopback(&self, loopback: bladerf_loopback) -> Result<isize, isize> {
 		unsafe {
-			let res = bladerf_set_loopback(self.device, loopback) as isize; 
+			let res = bladerf_set_loopback(self.device, loopback); 
 
 			handle_res!(res);
 		}
@@ -199,7 +199,7 @@ impl BladeRFDevice {
 		unsafe {
 			let mut loopback: bladerf_loopback = mem::uninitialized();
 
-			let res = bladerf_get_loopback(self.device, &mut loopback as *mut bladerf_loopback) as isize; 
+			let res = bladerf_get_loopback(self.device, &mut loopback as *mut bladerf_loopback); 
 
 			println!("get_loopback res: {:?} loopback: {:?}", res, loopback);
 
@@ -209,7 +209,7 @@ impl BladeRFDevice {
 
 	pub fn select_band(&self, module: bladerf_module, frequency: u32) -> Result<isize, isize> {
 		unsafe {
-			let res = bladerf_select_band(self.device, module, frequency) as isize;
+			let res = bladerf_select_band(self.device, module, frequency);
 
 			handle_res!(res);
 		}
@@ -217,7 +217,7 @@ impl BladeRFDevice {
 
 	pub fn set_frequency(&self, module: bladerf_module, frequency: u32) -> Result<isize, isize> {
 		unsafe {
-			let res = bladerf_set_frequency(self.device, module, frequency) as isize;
+			let res = bladerf_set_frequency(self.device, module, frequency);
 
 			handle_res!(res);
 		}
@@ -227,7 +227,7 @@ impl BladeRFDevice {
 		unsafe {
 			let mut freq: u32 = 0;
 
-			let res = bladerf_get_frequency(self.device, module, &mut freq as *mut u32) as isize; 
+			let res = bladerf_get_frequency(self.device, module, &mut freq as *mut u32); 
 
 			handle_res!(res, freq);
 		}
@@ -252,7 +252,7 @@ impl BladeRFDevice {
 			}
 
 			// Call underlying function
-			let res = bladerf_schedule_retune(self.device, module, time, frequency, p) as isize;
+			let res = bladerf_schedule_retune(self.device, module, time, frequency, p);
 
 			// Process response
 			handle_res!(res)
@@ -271,7 +271,7 @@ impl BladeRFDevice {
 		unsafe {
 			let mut quick_tune: Struct_bladerf_quick_tune = mem::uninitialized();
 
-			let res = bladerf_get_quick_tune(self.device, module, &mut quick_tune as *mut Struct_bladerf_quick_tune) as isize; 
+			let res = bladerf_get_quick_tune(self.device, module, &mut quick_tune as *mut Struct_bladerf_quick_tune); 
 
 			handle_res!(res, quick_tune);
 		}
@@ -346,7 +346,6 @@ impl BladeRFDevice {
 
 #[cfg(test)]
 mod tests {
-	use super::*;
 	use bladerf::*;
 
 	#[test]
