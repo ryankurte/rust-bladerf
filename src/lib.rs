@@ -9,18 +9,18 @@ use bladerf::*;
 
 // Macro to simplify integer returns
 macro_rules! handle_res {
-    ($res:expr) => (
-    	if $res >= 0 {
-			Ok($res as isize)
+    ($e:expr) => (
+    	if $e >= 0 {
+			return Ok($e as isize)
 		} else {
-			Err($res as isize)
+			return Err($e as isize)
 		}
 	);
-	($res:expr, $out: expr) => (
+	($res:expr, $out:expr) => (
 		if $res >= 0 {
-			Ok($out)
+			return Ok($out)
 		} else {
-			Err($res as isize)
+			return Err($res as isize)
 		}
 	);
 }
@@ -79,11 +79,7 @@ pub fn open_with_devinfo(devinfo: &Struct_bladerf_devinfo) -> Result<*mut Struct
 
 		let res = bladerf_open_with_devinfo(&device_ptr, unsafe_devinfo) as isize;
 
-		if res >= 0 {
-			Ok(device_ptr)
-		} else {
-			Err(res)
-		}
+		handle_res!(res, device_ptr);
 	}
 }
 
@@ -93,11 +89,7 @@ pub fn fw_version(dev: *mut Struct_bladerf) -> Result<Struct_bladerf_version, is
 
 		let res = bladerf_fw_version(dev, &mut version as *mut Struct_bladerf_version) as isize;
 
-		if res >= 0 {
-			Ok(version)
-		} else {
-			Err(res)
-		}
+		handle_res!(res, version);
 	}
 }
 
@@ -107,11 +99,7 @@ pub fn fpga_version(dev: *mut Struct_bladerf) -> Result<Struct_bladerf_version, 
 
 		let res = bladerf_fpga_version(dev, &mut version as *mut Struct_bladerf_version) as isize;
 
-		if res >= 0 {
-			Ok(version)
-		} else {
-			Err(res)
-		}
+		handle_res!(res, version);
 	}
 }
 
@@ -142,11 +130,7 @@ pub fn enable_module(device: *mut Struct_bladerf, module: bladerf_module, enable
 	unsafe {
 		let res = bladerf_enable_module(device, module, enable as u8) as isize;
 
-		if res >= 0 {
-			Ok(res)
-		} else {
-			Err(res as isize)
-		}
+		handle_res!(res);
 	}
 }
 
@@ -154,11 +138,7 @@ pub fn set_loopback(device: *mut Struct_bladerf, loopback: bladerf_loopback) -> 
 	unsafe {
 		let res = bladerf_set_loopback(device, loopback) as isize; 
 
-		if res >= 0 {
-			Ok(res)
-		} else {
-			Err(res as isize)
-		}
+		handle_res!(res);
 	}
 }
 
@@ -169,11 +149,7 @@ pub fn get_loopback(device: *mut Struct_bladerf) -> Result<bladerf_loopback, isi
 
 		let res = bladerf_get_loopback(device, loopback_ptr) as isize; 
 
-		if res >= 0 {
-			Ok(loopback)
-		} else {
-			Err(res as isize)
-		}
+		handle_res!(res, loopback);
 	}
 }
 
@@ -181,11 +157,7 @@ pub fn select_band(device: *mut Struct_bladerf, module: bladerf_module, frequenc
 	unsafe {
 		let res = bladerf_select_band(device, module, frequency) as isize;
 
-		if res >= 0 {
-			Ok(res as isize)
-		} else {
-			Err(res as isize)
-		}
+		handle_res!(res);
 	}
 }
 
@@ -193,11 +165,7 @@ pub fn set_frequency(device: *mut Struct_bladerf, module: bladerf_module, freque
 	unsafe {
 		let res = bladerf_set_frequency(device, module, frequency) as isize;
 
-		if res >= 0 {
-			Ok(res as isize)
-		} else {
-			Err(res as isize)
-		}
+		handle_res!(res);
 	}
 }
 
@@ -208,11 +176,7 @@ pub fn get_frequency(device: *mut Struct_bladerf, module: bladerf_module) -> Res
 
 		let res = bladerf_get_frequency(device, module, freq_ptr) as isize; 
 
-		if res >= 0 {
-			Ok(freq)
-		} else {
-			Err(res as isize)
-		}
+		handle_res!(res, freq);
 	}
 }
 
@@ -246,11 +210,7 @@ pub fn cancel_scheduled_retune(device: *mut Struct_bladerf, module: bladerf_modu
 	unsafe {
 		let res = bladerf_cancel_scheduled_retunes(device, module) as isize;
 
-		if res >= 0 {
-			Ok(res as isize)
-		} else {
-			Err(res as isize)
-		}
+		handle_res!(res);
 	}
 }
 
@@ -261,11 +221,7 @@ pub fn get_quick_tune(device: *mut Struct_bladerf, module: bladerf_module) -> Re
 
 		let res = bladerf_get_quick_tune(device, module, quick_tune_ptr) as isize; 
 
-		if res >= 0 {
-			Ok(quick_tune)
-		} else {
-			Err(res as isize)
-		}
+		handle_res!(res, quick_tune);
 	}
 }
 
@@ -273,11 +229,7 @@ pub fn set_tuning_mode(device: *mut Struct_bladerf, mode: bladerf_tuning_mode) -
 	unsafe {
 		let res = bladerf_set_tuning_mode(device, mode) as isize;
 
-		if res >= 0 {
-			Ok(res as isize)
-		} else {
-			Err(res as isize)
-		}
+		handle_res!(res);
 	}
 }
 
