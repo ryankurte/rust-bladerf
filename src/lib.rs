@@ -25,9 +25,8 @@ macro_rules! handle_res {
 	);
 }
 
-pub struct BladerfDevice {
-    pub device: *mut Struct_bladerf,
-    pub open: bool
+pub struct BladeRFDevice {
+   pub device: *mut Struct_bladerf
 }
 
 #[repr(C)]
@@ -80,227 +79,267 @@ pub fn set_usb_reset_on_open(enabled: bool) {
     } 
 }
 
-pub fn open_with_devinfo(devinfo: &Struct_bladerf_devinfo) -> Result<*mut Struct_bladerf, isize> {
+pub fn open_with_devinfo(devinfo: &Struct_bladerf_devinfo) -> Result<BladeRFDevice, isize> {
+
+	let devinfo_ptr: *const Struct_bladerf_devinfo = devinfo as *const Struct_bladerf_devinfo;
+
 	unsafe {
-		let device_ptr: *mut Struct_bladerf = mem::uninitialized();
-		let unsafe_devinfo: *const Struct_bladerf_devinfo = devinfo as *const Struct_bladerf_devinfo;
+		let bladerf_device = BladeRFDevice { device: mem::uninitialized() };
 
-		let res = bladerf_open_with_devinfo(&device_ptr, unsafe_devinfo) as isize;
+		let res = bladerf_open_with_devinfo(&(bladerf_device.device), devinfo_ptr) as isize;
 
-		handle_res!(res, device_ptr);
+		handle_res!(res, bladerf_device);
 	}
 }
 
-pub fn fw_version(dev: *mut Struct_bladerf) -> Result<Struct_bladerf_version, isize> {
-	unsafe {
-		let mut version: Struct_bladerf_version = mem::uninitialized();
+impl BladeRFDevice {
 
-		let res = bladerf_fw_version(dev, &mut version as *mut Struct_bladerf_version) as isize;
+	pub fn fw_version(&self) -> Result<Struct_bladerf_version, isize> {
+		unsafe {
+			let mut version: Struct_bladerf_version = mem::uninitialized();
 
-		handle_res!(res, version);
-	}
-}
+			let res = bladerf_fw_version(self.device, &mut version as *mut Struct_bladerf_version) as isize;
 
-pub fn fpga_version(dev: *mut Struct_bladerf) -> Result<Struct_bladerf_version, isize> {
-	unsafe {
-		let mut version: Struct_bladerf_version = mem::uninitialized();
-
-		let res = bladerf_fpga_version(dev, &mut version as *mut Struct_bladerf_version) as isize;
-
-		handle_res!(res, version);
-	}
-}
-
-pub fn get_serial(dev: *mut Struct_bladerf) -> Result<String, isize> {
-	unsafe {
-		// Create raw data array for serial return
-		let serial_data : Vec<::libc::c_char> = vec![0; 33];
-
-		// Call underlying c method
-		let res = bladerf_get_serial(dev, serial_data.as_ptr()) as isize;
-
-		if res >= 0 {
-			// Map ::libc::c_char back to u8 as required for string manipulation
-			let serial_u8: Vec<u8>= serial_data.iter().map(|&x| x as u8).collect();
-
-			// Build String
-			let serial_cstr = ffi::CString::from_vec_unchecked(serial_u8);
-			let serial_str = serial_cstr.into_string().unwrap();
-
-			Ok(serial_str)
-		} else {
-			Err(res as isize)
+			handle_res!(res, version);
 		}
 	}
-}
 
-pub fn enable_module(device: *mut Struct_bladerf, module: bladerf_module, enable: bool) -> Result<isize, isize> {
-	unsafe {
-		let res = bladerf_enable_module(device, module, enable as u8) as isize;
+	pub fn fpga_version(&self) -> Result<Struct_bladerf_version, isize> {
+		unsafe {
+			let mut version: Struct_bladerf_version = mem::uninitialized();
 
-		handle_res!(res);
+			let res = bladerf_fpga_version(self.device, &mut version as *mut Struct_bladerf_version) as isize;
+
+			handle_res!(res, version);
+		}
 	}
-}
 
-pub fn set_loopback(device: *mut Struct_bladerf, loopback: bladerf_loopback) -> Result<isize, isize> {
-	unsafe {
-		let res = bladerf_set_loopback(device, loopback) as isize; 
+	pub fn get_serial(&self) -> Result<String, isize> {
+		unsafe {
+			// Create raw data array for serial return
+			let serial_data : Vec<::libc::c_char> = vec![0; 33];
 
-		handle_res!(res);
-	}
-}
+			// Call underlying c method
+			let res = bladerf_get_serial(self.device, serial_data.as_ptr()) as isize;
 
-pub fn get_loopback(device: *mut Struct_bladerf) -> Result<bladerf_loopback, isize> {
-	unsafe {
-		let mut loopback: bladerf_loopback = mem::uninitialized();
+			if res >= 0 {
+				// Map ::libc::c_char back to u8 as required for string manipulation
+				let serial_u8: Vec<u8>= serial_data.iter().map(|&x| x as u8).collect();
 
-		let res = bladerf_get_loopback(device, &mut loopback as *mut bladerf_loopback) as isize; 
+				// Build String
+				let serial_cstr = ffi::CString::from_vec_unchecked(serial_u8);
+				let serial_str = serial_cstr.into_string().unwrap();
 
-		println!("get_loopback res: {:?}", res);
-
-		handle_res!(res, loopback);
-	}
-}
-
-pub fn select_band(device: *mut Struct_bladerf, module: bladerf_module, frequency: u32) -> Result<isize, isize> {
-	unsafe {
-		let res = bladerf_select_band(device, module, frequency) as isize;
-
-		handle_res!(res);
-	}
-}
-
-pub fn set_frequency(device: *mut Struct_bladerf, module: bladerf_module, frequency: u32) -> Result<isize, isize> {
-	unsafe {
-		let res = bladerf_set_frequency(device, module, frequency) as isize;
-
-		handle_res!(res);
-	}
-}
-
-pub fn get_frequency(device: *mut Struct_bladerf, module: bladerf_module) -> Result<u32, isize> {
-	unsafe {
-		let mut freq: u32 = 0;
-
-		let res = bladerf_get_frequency(device, module, &mut freq as *mut u32) as isize; 
-
-		handle_res!(res, freq);
-	}
-}
-
- 
-pub fn schedule_retune(device: *mut Struct_bladerf, module: bladerf_module, time: u64, frequency: u32, quick_tune: Option<Struct_bladerf_quick_tune>) -> Result<isize, isize> {
-	unsafe {
-
-		let mut quick_tune_int: Struct_bladerf_quick_tune;
-		let p: *mut Struct_bladerf_quick_tune;
-
-		// Check whether quick tune exists and map pointer as appropriate
-		match quick_tune {
-			Some(qt) => {
-				quick_tune_int = qt;
-				p = &mut quick_tune_int;
-			},
-			None => {
-				p = ptr::null_mut();
+				Ok(serial_str)
+			} else {
+				Err(res as isize)
 			}
 		}
-
-		// Call underlying function
-		let res = bladerf_schedule_retune(device, module, time, frequency, p) as isize;
-
-		// Process response
-		handle_res!(res)
 	}
-}
 
-pub fn cancel_scheduled_retune(device: *mut Struct_bladerf, module: bladerf_module) -> Result<isize, isize> {
-	unsafe {
-		let res = bladerf_cancel_scheduled_retunes(device, module) as isize;
+	pub fn get_fpga_size(&self) -> Result<bladerf_fpga_size, isize> {
+		let mut fpga_size: bladerf_fpga_size = bladerf_fpga_size::BLADERF_FPGA_UNKNOWN;
 
-		handle_res!(res);
-	}
-}
+		unsafe {
+			let res = bladerf_get_fpga_size(self.device, &mut fpga_size as *mut bladerf_fpga_size);
 
-pub fn get_quick_tune(device: *mut Struct_bladerf, module: bladerf_module) -> Result<Struct_bladerf_quick_tune, isize> {
-	unsafe {
-		let mut quick_tune: Struct_bladerf_quick_tune = mem::uninitialized();
-
-		let res = bladerf_get_quick_tune(device, module, &mut quick_tune as *mut Struct_bladerf_quick_tune) as isize; 
-
-		handle_res!(res, quick_tune);
-	}
-}
-
-pub fn set_tuning_mode(device: *mut Struct_bladerf, mode: bladerf_tuning_mode) -> Result<isize, isize> {
-	unsafe {
-		let res = bladerf_set_tuning_mode(device, mode) as isize;
-
-		handle_res!(res);
-	}
-}
-
-pub fn sync_config(device: *mut Struct_bladerf, module: bladerf_module, format: bladerf_format,
-				   num_buffers: u32, buffer_size: u32, num_transfers: Option<u32>, stream_timeout: u32)
-				   -> Result<isize, isize> {
-
-	let num_transfers = match num_transfers { Some(t) => t, None => 4};
-
-	unsafe {
-		let res = bladerf_sync_config(device, module, format, num_buffers, buffer_size, num_transfers, stream_timeout);
-	
-		handle_res!(res);
-	}
-}
-
-pub fn sync_tx(device: *mut Struct_bladerf, data: Vec<iq>, meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
-	       -> Result<isize, isize> {
-
-	// Handle optional meta argument
-	let meta_ptr: *mut Struct_bladerf_metadata = match meta { 
-		Some(m) => {
-			let mut meta_int = m;
-			&mut meta_int
-		}, None => {
-			ptr::null_mut()
+			handle_res!(res, fpga_size);
 		}
-	};
-
-	let data_ptr: *mut libc::c_void = data.as_ptr() as *mut libc::c_void;
-
-	unsafe {
-		let res = bladerf_sync_tx(device, data_ptr, data.len() as u32, meta_ptr, stream_timeout);
-	
-		handle_res!(res);
 	}
-}
 
-pub fn sync_rx(device: *mut Struct_bladerf, data: &mut Vec<iq>, meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
-	       -> Result<isize, isize> {
+	pub fn is_fpga_configured(&self) -> Result<bool, isize> {
+		unsafe {
+			let res = bladerf_is_fpga_configured(self.device);
 
-	// Handle optional meta argument
-	let meta_ptr: *mut Struct_bladerf_metadata = match meta { 
-		Some(m) => {
-			let mut meta_int = m;
-			&mut meta_int
-		}, None => {
-			ptr::null_mut()
+			if res > 0 {
+				Ok(true)
+			} else if res == 0 {
+				Ok(false)
+			} else {
+				Err(res as isize)
+			}
 		}
-	};
-
-	let data_ptr: *mut libc::c_void = data.as_ptr() as *mut libc::c_void;
-
-	unsafe {
-		let res = bladerf_sync_rx(device, data_ptr, data.len() as u32, meta_ptr, stream_timeout);
-	
-		handle_res!(res);
 	}
-}
+
+	pub fn load_fpga(&self, file: String) {
 
 
-pub fn close_device(device: *mut Struct_bladerf) {
-	unsafe {
-		bladerf_close(device)
+		unsafe {
+			//let res = bladerf_load_fpga(self.device, );
+
+			//handle_res!(res);
+		}
+	}
+
+
+	pub fn close(&self) {
+		unsafe {
+			bladerf_close(self.device)
+		}
+	}
+
+
+	pub fn enable_module(&self, module: bladerf_module, enable: bool) -> Result<isize, isize> {
+		unsafe {
+			let res = bladerf_enable_module(self.device, module, enable as u8) as isize;
+
+			handle_res!(res);
+		}
+	}
+
+	pub fn set_loopback(&self, loopback: bladerf_loopback) -> Result<isize, isize> {
+		unsafe {
+			let res = bladerf_set_loopback(self.device, loopback) as isize; 
+
+			handle_res!(res);
+		}
+	}
+
+	pub fn get_loopback(&self) -> Result<bladerf_loopback, isize> {
+		unsafe {
+			let mut loopback: bladerf_loopback = mem::uninitialized();
+
+			let res = bladerf_get_loopback(self.device, &mut loopback as *mut bladerf_loopback) as isize; 
+
+			println!("get_loopback res: {:?} loopback: {:?}", res, loopback);
+
+			handle_res!(res, loopback);
+		}
+	}
+
+	pub fn select_band(&self, module: bladerf_module, frequency: u32) -> Result<isize, isize> {
+		unsafe {
+			let res = bladerf_select_band(self.device, module, frequency) as isize;
+
+			handle_res!(res);
+		}
+	}
+
+	pub fn set_frequency(&self, module: bladerf_module, frequency: u32) -> Result<isize, isize> {
+		unsafe {
+			let res = bladerf_set_frequency(self.device, module, frequency) as isize;
+
+			handle_res!(res);
+		}
+	}
+
+	pub fn get_frequency(&self, module: bladerf_module) -> Result<u32, isize> {
+		unsafe {
+			let mut freq: u32 = 0;
+
+			let res = bladerf_get_frequency(self.device, module, &mut freq as *mut u32) as isize; 
+
+			handle_res!(res, freq);
+		}
+	}
+
+	 
+	pub fn schedule_retune(&self, module: bladerf_module, time: u64, frequency: u32, quick_tune: Option<Struct_bladerf_quick_tune>) -> Result<isize, isize> {
+		unsafe {
+
+			let mut quick_tune_int: Struct_bladerf_quick_tune;
+			let p: *mut Struct_bladerf_quick_tune;
+
+			// Check whether quick tune exists and map pointer as appropriate
+			match quick_tune {
+				Some(qt) => {
+					quick_tune_int = qt;
+					p = &mut quick_tune_int;
+				},
+				None => {
+					p = ptr::null_mut();
+				}
+			}
+
+			// Call underlying function
+			let res = bladerf_schedule_retune(self.device, module, time, frequency, p) as isize;
+
+			// Process response
+			handle_res!(res)
+		}
+	}
+
+	pub fn cancel_scheduled_retune(&self, module: bladerf_module) -> Result<isize, isize> {
+		unsafe {
+			let res = bladerf_cancel_scheduled_retunes(self.device, module) as isize;
+
+			handle_res!(res);
+		}
+	}
+
+	pub fn get_quick_tune(&self, module: bladerf_module) -> Result<Struct_bladerf_quick_tune, isize> {
+		unsafe {
+			let mut quick_tune: Struct_bladerf_quick_tune = mem::uninitialized();
+
+			let res = bladerf_get_quick_tune(self.device, module, &mut quick_tune as *mut Struct_bladerf_quick_tune) as isize; 
+
+			handle_res!(res, quick_tune);
+		}
+	}
+
+	pub fn set_tuning_mode(&self, mode: bladerf_tuning_mode) -> Result<isize, isize> {
+		unsafe {
+			let res = bladerf_set_tuning_mode(self.device, mode) as isize;
+
+			handle_res!(res);
+		}
+	}
+
+	pub fn sync_config(&self, module: bladerf_module, format: bladerf_format,
+					   num_buffers: u32, buffer_size: u32, num_transfers: Option<u32>, stream_timeout: u32)
+					   -> Result<isize, isize> {
+
+		let num_transfers = match num_transfers { Some(t) => t, None => 4};
+
+		unsafe {
+			let res = bladerf_sync_config(self.device, module, format, num_buffers, buffer_size, num_transfers, stream_timeout);
+		
+			handle_res!(res);
+		}
+	}
+
+	pub fn sync_tx(&self, data: Vec<iq>, meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
+		       -> Result<isize, isize> {
+
+		// Handle optional meta argument
+		let meta_ptr: *mut Struct_bladerf_metadata = match meta { 
+			Some(m) => {
+				let mut meta_int = m;
+				&mut meta_int
+			}, None => {
+				ptr::null_mut()
+			}
+		};
+
+		let data_ptr: *mut libc::c_void = data.as_ptr() as *mut libc::c_void;
+
+		unsafe {
+			let res = bladerf_sync_tx(self.device, data_ptr, data.len() as u32, meta_ptr, stream_timeout);
+		
+			handle_res!(res);
+		}
+	}
+
+	pub fn sync_rx(&self, data: &mut Vec<iq>, meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
+		       -> Result<isize, isize> {
+
+		// Handle optional meta argument
+		let meta_ptr: *mut Struct_bladerf_metadata = match meta { 
+			Some(m) => {
+				let mut meta_int = m;
+				&mut meta_int
+			}, None => {
+				ptr::null_mut()
+			}
+		};
+
+		let data_ptr: *mut libc::c_void = data.as_ptr() as *mut libc::c_void;
+
+		unsafe {
+			let res = bladerf_sync_rx(self.device, data_ptr, data.len() as u32, meta_ptr, stream_timeout);
+		
+			handle_res!(res);
+		}
 	}
 }
 
@@ -324,13 +363,27 @@ mod tests {
 	}
 
 	#[test]
-	fn test_get_version() {
+	fn test_get_fw_version() {
 		let devices = super::get_device_list().unwrap();
 		assert!(devices.len() != 0);
 		let device = super::open_with_devinfo(&devices[0]).unwrap();
-		let version = super::fw_version(device).unwrap();
-		println!("Version {:?}", version);
-		super::close_device(device);
+
+		let version = device.fw_version().unwrap();
+		println!("FW Version {:?}", version);
+
+		device.close();
+	}
+
+	#[test]
+	fn test_get_fpga_version() {
+		let devices = super::get_device_list().unwrap();
+		assert!(devices.len() != 0);
+		let device = super::open_with_devinfo(&devices[0]).unwrap();
+
+		let version = device.fpga_version().unwrap();
+		println!("FPGA Version {:?}", version);
+
+		device.close();
 	}
 
 	#[test]
@@ -338,24 +391,45 @@ mod tests {
 		let devices = super::get_device_list().unwrap();
 		assert!(devices.len() != 0);
 		let device = super::open_with_devinfo(&devices[0]).unwrap();
-		let serial = super::get_serial(device).unwrap();
+
+		let serial = device.get_serial().unwrap();
 		println!("Serial: {:?}", serial);
 		assert!(serial.len() == 33);
-		super::close_device(device);
+
+		device.close();
 	}
 
 	#[test]
-	#[ignore]
+	fn test_fpga_loaded() {
+		let devices = super::get_device_list().unwrap();
+		assert!(devices.len() != 0);
+		let device = super::open_with_devinfo(&devices[0]).unwrap();
+		
+		let loaded = device.is_fpga_configured().unwrap();
+		assert_eq!(true, loaded);
+
+		device.close();
+	}
+
+	#[test]
 	fn test_loopback_modes() {
+		super::set_usb_reset_on_open(true);
 		let devices = super::get_device_list().unwrap();
 		assert!(devices.len() != 0);
 		let device = super::open_with_devinfo(&devices[0]).unwrap();
 
-		let loopback = super::get_loopback(device).unwrap();
+		// Check initial is none
+		let loopback = device.get_loopback().unwrap();
 		assert!(loopback == bladerf_loopback::BLADERF_LB_NONE);
 
-		//super::set_loopback(device, bladerf_loopback::BLADERF_LB_FIRMWARE).unwrap();
+		// Set and check loopback modes
+		device.set_loopback(bladerf_loopback::BLADERF_LB_FIRMWARE).unwrap();
+		let loopback = device.get_loopback().unwrap();
+		assert!(loopback == bladerf_loopback::BLADERF_LB_FIRMWARE);
 
-		super::close_device(device);
+		// Reset
+		device.set_loopback(bladerf_loopback::BLADERF_LB_NONE).unwrap();
+
+		device.close();
 	}
 }
