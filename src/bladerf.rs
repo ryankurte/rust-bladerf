@@ -165,6 +165,27 @@ pub enum bladerf_format {
     BLADERF_FORMAT_SC16_Q11_META = 1,
 }
 
+pub enum bladerf_error {
+    BLADERF_ERR_UNEXPECTED  = -1,
+    BLADERF_ERR_RANGE       = -2,
+    BLADERF_ERR_INVAL       = -3,
+    BLADERF_ERR_MEM         = -4,
+    BLADERF_ERR_IO          = -5,
+    BLADERF_ERR_TIMEOUT     = -6,
+    BLADERF_ERR_NODEV       = -7,
+    BLADERF_ERR_UNSUPPORTED = -8,
+    BLADERF_ERR_MISALIGNED  = -9,
+    BLADERF_ERR_CHECKSUM    = -10,
+    BLADERF_ERR_NO_FILE     = -11,
+    BLADERF_ERR_UPDATE_FPGA = -12,
+    BLADERF_ERR_UPDATE_FW   = -13,
+    BLADERF_ERR_TIME_PAST   = -14,
+    BLADERF_ERR_QUEUE_FULL  = -15,
+    BLADERF_ERR_FPGA_OP     = -16,
+    BLADERF_ERR_PERMISSION  = -17,
+    BLADERF_ERR_WOULD_BLOCK = -18,
+}
+
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_bladerf_metadata {

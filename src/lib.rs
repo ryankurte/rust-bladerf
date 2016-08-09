@@ -236,8 +236,6 @@ impl BladeRFDevice {
 
 			let res = bladerf_get_loopback(self.device, &mut loopback as *mut bladerf_loopback); 
 
-			println!("get_loopback res: {:?} loopback: {:?}", res, loopback);
-
 			handle_res!(res, loopback);
 		}
 	}
