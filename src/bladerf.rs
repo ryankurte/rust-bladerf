@@ -290,7 +290,7 @@ extern "C" {
     pub fn bladerf_open_with_devinfo(device: &*mut Struct_bladerf,
                                      devinfo: *const Struct_bladerf_devinfo)
      -> ::libc::c_int;
-    pub fn bladerf_open(device: *mut *mut Struct_bladerf,
+    pub fn bladerf_open(device:  &*mut Struct_bladerf,
                         device_identifier: *const ::libc::c_char)
      -> ::libc::c_int;
     pub fn bladerf_close(device: *mut Struct_bladerf) -> ();

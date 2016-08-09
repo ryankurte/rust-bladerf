@@ -1,7 +1,6 @@
 extern crate libc;
 
 use std::*;
-use libc::*;
 
 #[allow(dead_code, non_camel_case_types)]
 mod bladerf;
@@ -25,8 +24,20 @@ macro_rules! handle_res {
 	);
 }
 
-pub struct BladeRFDevice {
-   pub device: *mut Struct_bladerf
+// BladeRF module config object
+pub struct BladeRFModuleConfig {
+	pub frequency: u32,
+	pub sample_rate: u32,
+	pub bandwidth: u32,
+	pub lna_gain: u32,
+	pub vga1: u32,
+	pub vga2: u32
+}
+
+// BladeRF overall config object
+pub struct BladeRFConfig {
+	pub tx: BladeRFModuleConfig,
+	pub rx: BladeRFModuleConfig
 }
 
 #[repr(C)]
@@ -36,11 +47,13 @@ pub struct iq {
 	pub q: i16
 }
 
-//impl fmt::Display for Struct_bladerf_devinfo {
-//    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//        write!(f, "serial: UNIMPLEMENTED, bus: {}, address: {})", self.usb_bus, self.usb_addr)
-//    }
-//}
+// BladeRF device object
+pub struct BladeRFDevice {
+   device: *mut Struct_bladerf
+}
+
+
+/***		Static Functions			***/
 
 pub fn get_device_list() -> Result<Vec<Struct_bladerf_devinfo>, isize> {
 
@@ -75,8 +88,27 @@ pub fn get_device_list() -> Result<Vec<Struct_bladerf_devinfo>, isize> {
 
 pub fn set_usb_reset_on_open(enabled: bool) {
     unsafe{ 
-    	bladerf_set_usb_reset_on_open(enabled as uint8_t); 
+    	bladerf_set_usb_reset_on_open(enabled as libc::uint8_t); 
     } 
+}
+
+pub fn open(identifier: Option<String>) -> Result<BladeRFDevice, isize> {
+	unsafe {
+		let id_ptr = match identifier {
+			Some(id) => {
+				let c_string = ffi::CString::new(id.into_bytes()).unwrap();
+				c_string.as_ptr()
+			}, None => {
+				ptr::null()
+			}
+		};
+
+		let bladerf_device = BladeRFDevice { device: mem::uninitialized() };
+
+		let res = bladerf_open(&(bladerf_device.device), id_ptr);
+
+		handle_res!(res, bladerf_device);
+	}
 }
 
 pub fn open_with_devinfo(devinfo: &Struct_bladerf_devinfo) -> Result<BladeRFDevice, isize> {
@@ -91,6 +123,9 @@ pub fn open_with_devinfo(devinfo: &Struct_bladerf_devinfo) -> Result<BladeRFDevi
 		handle_res!(res, bladerf_device);
 	}
 }
+
+
+/***		BladeRFDevice Methods			***/
 
 impl BladeRFDevice {
 
@@ -362,10 +397,22 @@ mod tests {
 	}
 
 	#[test]
-	fn test_get_fw_version() {
+	fn test_open() {
+		let device = super::open(None).unwrap();
+		device.close();
+	}
+
+	#[test]
+	fn test_open_devinfo() {
 		let devices = super::get_device_list().unwrap();
 		assert!(devices.len() != 0);
 		let device = super::open_with_devinfo(&devices[0]).unwrap();
+		device.close();
+	}
+
+	#[test]
+	fn test_get_fw_version() {
+		let device = super::open(None).unwrap();
 
 		let version = device.fw_version().unwrap();
 		println!("FW Version {:?}", version);
@@ -375,9 +422,7 @@ mod tests {
 
 	#[test]
 	fn test_get_fpga_version() {
-		let devices = super::get_device_list().unwrap();
-		assert!(devices.len() != 0);
-		let device = super::open_with_devinfo(&devices[0]).unwrap();
+		let device = super::open(None).unwrap();
 
 		let version = device.fpga_version().unwrap();
 		println!("FPGA Version {:?}", version);
@@ -387,9 +432,7 @@ mod tests {
 
 	#[test]
 	fn test_get_serial() {
-		let devices = super::get_device_list().unwrap();
-		assert!(devices.len() != 0);
-		let device = super::open_with_devinfo(&devices[0]).unwrap();
+		let device = super::open(None).unwrap();
 
 		let serial = device.get_serial().unwrap();
 		println!("Serial: {:?}", serial);
@@ -400,9 +443,7 @@ mod tests {
 
 	#[test]
 	fn test_fpga_loaded() {
-		let devices = super::get_device_list().unwrap();
-		assert!(devices.len() != 0);
-		let device = super::open_with_devinfo(&devices[0]).unwrap();
+		let device = super::open(None).unwrap();
 		
 		let loaded = device.is_fpga_configured().unwrap();
 		assert_eq!(true, loaded);
@@ -412,10 +453,7 @@ mod tests {
 
 	#[test]
 	fn test_loopback_modes() {
-		super::set_usb_reset_on_open(true);
-		let devices = super::get_device_list().unwrap();
-		assert!(devices.len() != 0);
-		let device = super::open_with_devinfo(&devices[0]).unwrap();
+		let device = super::open(None).unwrap();
 
 		// Check initial is none
 		let loopback = device.get_loopback().unwrap();
