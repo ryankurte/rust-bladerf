@@ -7,6 +7,24 @@ use libc::*;
 mod bladerf;
 use bladerf::*;
 
+// Macro to simplify integer returns
+macro_rules! handle_res {
+    ($res:expr) => (
+    	if $res >= 0 {
+			Ok($res as isize)
+		} else {
+			Err($res as isize)
+		}
+	);
+	($res:expr, $out: expr) => (
+		if $res >= 0 {
+			Ok($out)
+		} else {
+			Err($res as isize)
+		}
+	);
+}
+
 pub struct BladerfDevice {
     pub device: *mut *mut Struct_bladerf,
 }
@@ -114,6 +132,149 @@ pub fn get_serial(dev: *mut Struct_bladerf) -> Result<String, isize> {
 			let serial_str = serial_cstr.into_string().unwrap();
 
 			Ok(serial_str)
+		} else {
+			Err(res as isize)
+		}
+	}
+}
+
+pub fn enable_module(device: *mut Struct_bladerf, module: bladerf_module, enable: bool) -> Result<isize, isize> {
+	unsafe {
+		let res = bladerf_enable_module(device, module, enable as u8) as isize;
+
+		if res >= 0 {
+			Ok(res)
+		} else {
+			Err(res as isize)
+		}
+	}
+}
+
+pub fn set_loopback(device: *mut Struct_bladerf, loopback: bladerf_loopback) -> Result<isize, isize> {
+	unsafe {
+		let res = bladerf_set_loopback(device, loopback) as isize; 
+
+		if res >= 0 {
+			Ok(res)
+		} else {
+			Err(res as isize)
+		}
+	}
+}
+
+pub fn get_loopback(device: *mut Struct_bladerf) -> Result<bladerf_loopback, isize> {
+	unsafe {
+		let mut loopback: bladerf_loopback = mem::uninitialized();;
+		let loopback_ptr: *mut bladerf_loopback = &mut loopback;
+
+		let res = bladerf_get_loopback(device, loopback_ptr) as isize; 
+
+		if res >= 0 {
+			Ok(loopback)
+		} else {
+			Err(res as isize)
+		}
+	}
+}
+
+pub fn select_band(device: *mut Struct_bladerf, module: bladerf_module, frequency: u32) -> Result<isize, isize> {
+	unsafe {
+		let res = bladerf_select_band(device, module, frequency) as isize;
+
+		if res >= 0 {
+			Ok(res as isize)
+		} else {
+			Err(res as isize)
+		}
+	}
+}
+
+pub fn set_frequency(device: *mut Struct_bladerf, module: bladerf_module, frequency: u32) -> Result<isize, isize> {
+	unsafe {
+		let res = bladerf_set_frequency(device, module, frequency) as isize;
+
+		if res >= 0 {
+			Ok(res as isize)
+		} else {
+			Err(res as isize)
+		}
+	}
+}
+
+pub fn get_frequency(device: *mut Struct_bladerf, module: bladerf_module) -> Result<u32, isize> {
+	unsafe {
+		let mut freq: u32 = 0;
+		let freq_ptr: *mut u32 = &mut freq;
+
+		let res = bladerf_get_frequency(device, module, freq_ptr) as isize; 
+
+		if res >= 0 {
+			Ok(freq)
+		} else {
+			Err(res as isize)
+		}
+	}
+}
+
+ 
+pub fn schedule_retune(device: *mut Struct_bladerf, module: bladerf_module, time: u64, frequency: u32, quick_tune: Option<Struct_bladerf_quick_tune>) -> Result<isize, isize> {
+	unsafe {
+
+		let mut quick_tune_int: Struct_bladerf_quick_tune;
+		let p: *mut Struct_bladerf_quick_tune;
+
+		// Check whether quick tune exists and map pointer as appropriate
+		match quick_tune {
+			Some(qt) => {
+				quick_tune_int = qt;
+				p = &mut quick_tune_int;
+			},
+			None => {
+				p = ptr::null_mut();
+			}
+		}
+
+		// Call underlying function
+		let res = bladerf_schedule_retune(device, module, time, frequency, p) as isize;
+
+		// Process response
+		handle_res!(res)
+	}
+}
+
+pub fn cancel_scheduled_retune(device: *mut Struct_bladerf, module: bladerf_module) -> Result<isize, isize> {
+	unsafe {
+		let res = bladerf_cancel_scheduled_retunes(device, module) as isize;
+
+		if res >= 0 {
+			Ok(res as isize)
+		} else {
+			Err(res as isize)
+		}
+	}
+}
+
+pub fn get_quick_tune(device: *mut Struct_bladerf, module: bladerf_module) -> Result<Struct_bladerf_quick_tune, isize> {
+	unsafe {
+		let mut quick_tune: Struct_bladerf_quick_tune = mem::uninitialized();
+		let quick_tune_ptr: *mut Struct_bladerf_quick_tune = &mut quick_tune;
+
+		let res = bladerf_get_quick_tune(device, module, quick_tune_ptr) as isize; 
+
+		if res >= 0 {
+			Ok(quick_tune)
+		} else {
+			Err(res as isize)
+		}
+	}
+}
+
+pub fn set_tuning_mode(device: *mut Struct_bladerf, mode: bladerf_tuning_mode) -> Result<isize, isize> {
+	unsafe {
+		let res = bladerf_set_tuning_mode(device, mode) as isize;
+
+		if res >= 0 {
+			Ok(res as isize)
 		} else {
 			Err(res as isize)
 		}
