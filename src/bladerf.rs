@@ -17,6 +17,7 @@ pub enum bladerf_backend {
 }
 
 #[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub enum bladerf_dev_speed {
     BLADERF_DEVICE_SPEED_UNKNOWN = 0,
     BLADERF_DEVICE_SPEED_HIGH = 1,
@@ -40,6 +41,7 @@ impl ::std::default::Default for Struct_bladerf_devinfo {
 }
 
 #[repr(C)]
+#[derive(Debug, PartialEq)]
 pub enum bladerf_tuning_mode {
     BLADERF_TUNING_MODE_INVALID = -1,
     BLADERF_TUNING_MODE_HOST = 0,
@@ -47,6 +49,7 @@ pub enum bladerf_tuning_mode {
 }
 
 #[repr(C)]
+#[derive(Debug, PartialEq)]
 pub enum bladerf_loopback {
     BLADERF_LB_FIRMWARE = 1,
     BLADERF_LB_BB_TXLPF_RXVGA2 = 2,

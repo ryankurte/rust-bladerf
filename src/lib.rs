@@ -26,7 +26,8 @@ macro_rules! handle_res {
 }
 
 pub struct BladerfDevice {
-    pub device: *mut *mut Struct_bladerf,
+    pub device: *mut Struct_bladerf,
+    pub open: bool
 }
 
 #[repr(C)]
@@ -154,6 +155,8 @@ pub fn get_loopback(device: *mut Struct_bladerf) -> Result<bladerf_loopback, isi
 		let mut loopback: bladerf_loopback = mem::uninitialized();
 
 		let res = bladerf_get_loopback(device, &mut loopback as *mut bladerf_loopback) as isize; 
+
+		println!("get_loopback res: {:?}", res);
 
 		handle_res!(res, loopback);
 	}
@@ -304,9 +307,11 @@ pub fn close_device(device: *mut Struct_bladerf) {
 
 #[cfg(test)]
 mod tests {
+	use super::*;
+	use bladerf::*;
 
 	#[test]
-	fn list_devices() {
+	fn test_list_devices() {
 		match super::get_device_list() {
 			Ok(devices) => {
 				println!("Discovered {:?} devices", devices.len());
@@ -319,7 +324,7 @@ mod tests {
 	}
 
 	#[test]
-	fn get_version() {
+	fn test_get_version() {
 		let devices = super::get_device_list().unwrap();
 		assert!(devices.len() != 0);
 		let device = super::open_with_devinfo(&devices[0]).unwrap();
@@ -329,7 +334,7 @@ mod tests {
 	}
 
 	#[test]
-	fn get_serial() {
+	fn test_get_serial() {
 		let devices = super::get_device_list().unwrap();
 		assert!(devices.len() != 0);
 		let device = super::open_with_devinfo(&devices[0]).unwrap();
@@ -339,4 +344,18 @@ mod tests {
 		super::close_device(device);
 	}
 
+	#[test]
+	#[ignore]
+	fn test_loopback_modes() {
+		let devices = super::get_device_list().unwrap();
+		assert!(devices.len() != 0);
+		let device = super::open_with_devinfo(&devices[0]).unwrap();
+
+		let loopback = super::get_loopback(device).unwrap();
+		assert!(loopback == bladerf_loopback::BLADERF_LB_NONE);
+
+		//super::set_loopback(device, bladerf_loopback::BLADERF_LB_FIRMWARE).unwrap();
+
+		super::close_device(device);
+	}
 }
