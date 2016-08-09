@@ -29,6 +29,13 @@ pub struct BladerfDevice {
     pub device: *mut *mut Struct_bladerf,
 }
 
+#[repr(C)]
+#[repr(packed)]
+pub struct iq {
+	pub i: i16,
+	pub q: i16
+}
+
 //impl fmt::Display for Struct_bladerf_devinfo {
 //    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 //        write!(f, "serial: UNIMPLEMENTED, bus: {}, address: {})", self.usb_bus, self.usb_addr)
@@ -229,6 +236,64 @@ pub fn set_tuning_mode(device: *mut Struct_bladerf, mode: bladerf_tuning_mode) -
 		handle_res!(res);
 	}
 }
+
+pub fn sync_config(device: *mut Struct_bladerf, module: bladerf_module, format: bladerf_format,
+				   num_buffers: u32, buffer_size: u32, num_transfers: Option<u32>, stream_timeout: u32)
+				   -> Result<isize, isize> {
+
+	let num_transfers = match num_transfers { Some(t) => t, None => 4};
+
+	unsafe {
+		let res = bladerf_sync_config(device, module, format, num_buffers, buffer_size, num_transfers, stream_timeout);
+	
+		handle_res!(res);
+	}
+}
+
+pub fn sync_tx(device: *mut Struct_bladerf, data: Vec<iq>, meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
+	       -> Result<isize, isize> {
+
+	// Handle optional meta argument
+	let meta_ptr: *mut Struct_bladerf_metadata = match meta { 
+		Some(m) => {
+			let mut meta_int = m;
+			&mut meta_int
+		}, None => {
+			ptr::null_mut()
+		}
+	};
+
+	let data_ptr: *mut libc::c_void = data.as_ptr() as *mut libc::c_void;
+
+	unsafe {
+		let res = bladerf_sync_tx(device, data_ptr, data.len() as u32, meta_ptr, stream_timeout);
+	
+		handle_res!(res);
+	}
+}
+
+pub fn sync_rx(device: *mut Struct_bladerf, data: &mut Vec<iq>, meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
+	       -> Result<isize, isize> {
+
+	// Handle optional meta argument
+	let meta_ptr: *mut Struct_bladerf_metadata = match meta { 
+		Some(m) => {
+			let mut meta_int = m;
+			&mut meta_int
+		}, None => {
+			ptr::null_mut()
+		}
+	};
+
+	let data_ptr: *mut libc::c_void = data.as_ptr() as *mut libc::c_void;
+
+	unsafe {
+		let res = bladerf_sync_rx(device, data_ptr, data.len() as u32, meta_ptr, stream_timeout);
+	
+		handle_res!(res);
+	}
+}
+
 
 pub fn close_device(device: *mut Struct_bladerf) {
 	unsafe {
