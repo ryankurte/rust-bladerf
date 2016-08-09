@@ -144,10 +144,9 @@ pub fn set_loopback(device: *mut Struct_bladerf, loopback: bladerf_loopback) -> 
 
 pub fn get_loopback(device: *mut Struct_bladerf) -> Result<bladerf_loopback, isize> {
 	unsafe {
-		let mut loopback: bladerf_loopback = mem::uninitialized();;
-		let loopback_ptr: *mut bladerf_loopback = &mut loopback;
+		let mut loopback: bladerf_loopback = mem::uninitialized();
 
-		let res = bladerf_get_loopback(device, loopback_ptr) as isize; 
+		let res = bladerf_get_loopback(device, &mut loopback as *mut bladerf_loopback) as isize; 
 
 		handle_res!(res, loopback);
 	}
@@ -172,9 +171,8 @@ pub fn set_frequency(device: *mut Struct_bladerf, module: bladerf_module, freque
 pub fn get_frequency(device: *mut Struct_bladerf, module: bladerf_module) -> Result<u32, isize> {
 	unsafe {
 		let mut freq: u32 = 0;
-		let freq_ptr: *mut u32 = &mut freq;
 
-		let res = bladerf_get_frequency(device, module, freq_ptr) as isize; 
+		let res = bladerf_get_frequency(device, module, &mut freq as *mut u32) as isize; 
 
 		handle_res!(res, freq);
 	}
@@ -217,9 +215,8 @@ pub fn cancel_scheduled_retune(device: *mut Struct_bladerf, module: bladerf_modu
 pub fn get_quick_tune(device: *mut Struct_bladerf, module: bladerf_module) -> Result<Struct_bladerf_quick_tune, isize> {
 	unsafe {
 		let mut quick_tune: Struct_bladerf_quick_tune = mem::uninitialized();
-		let quick_tune_ptr: *mut Struct_bladerf_quick_tune = &mut quick_tune;
 
-		let res = bladerf_get_quick_tune(device, module, quick_tune_ptr) as isize; 
+		let res = bladerf_get_quick_tune(device, module, &mut quick_tune as *mut Struct_bladerf_quick_tune) as isize; 
 
 		handle_res!(res, quick_tune);
 	}
