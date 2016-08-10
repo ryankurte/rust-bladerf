@@ -719,4 +719,34 @@ mod tests {
 
 		device.close();
 	}
+
+	#[test]
+	fn test_set_freq() {
+		let device = super::open(None).unwrap();
+
+		let freq: u32 = 915000000;
+
+		// Set and check frequency
+		device.set_frequency(bladerf_module::BLADERF_MODULE_RX, freq).unwrap();
+
+		let actual_freq = device.get_frequency(bladerf_module::BLADERF_MODULE_RX).unwrap();
+		assert!(actual_freq == freq);
+
+		device.close();
+	}
+
+	#[test]
+	fn test_set_sampling() {
+		let device = super::open(None).unwrap();
+
+		let sampling: bladerf_sampling = bladerf_sampling::BLADERF_SAMPLING_INTERNAL;
+
+		// Set and check frequency
+		device.set_sampling(sampling).unwrap();
+
+		let actual_sampling = device.get_sampling().unwrap();
+		assert!(actual_sampling == sampling);
+
+		device.close();
+	}
 }

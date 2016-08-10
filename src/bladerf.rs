@@ -77,10 +77,17 @@ impl ::std::default::Default for Struct_bladerf_rational_rate {
 }
 
 #[repr(C)]
+#[derive(Copy, PartialEq)]
 pub enum bladerf_sampling {
     BLADERF_SAMPLING_UNKNOWN = 0,
     BLADERF_SAMPLING_INTERNAL = 1,
     BLADERF_SAMPLING_EXTERNAL = 2,
+}
+impl ::std::clone::Clone for bladerf_sampling {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for bladerf_sampling {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 
 #[repr(C)]
