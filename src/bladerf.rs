@@ -99,9 +99,13 @@ pub enum bladerf_lpf_mode {
 }
 
 #[repr(C)]
+#[derive(Copy)]
 pub enum bladerf_module {
     BLADERF_MODULE_RX = 0,
     BLADERF_MODULE_TX = 1,
+}
+impl ::std::clone::Clone for bladerf_module {
+    fn clone(&self) -> Self { *self }
 }
 
 #[repr(C)]
