@@ -402,8 +402,51 @@ impl BladeRFDevice {
 		}
 	}
 
-//bladerf_get_sampling (self.device, bladerf_sampling *sampling)
+	// Bandwidth Configuration
+	// http://www.nuand.com/libbladeRF-doc/v1.7.2/group___f_n___b_a_n_d_w_i_d_t_h.html
 
+	pub fn set_bandwidth(&self, module: bladerf_module, bandwidth: u32) -> Result<u32, isize> {
+		let mut actual: u32 = 0;
+
+		unsafe {
+			let res = bladerf_set_bandwidth(self.device, module, bandwidth, &mut actual as *mut u32);
+
+			handle_res!(res, actual);
+		}
+	}
+
+	pub fn get_bandwidth(&self, module: bladerf_module) -> Result<u32, isize> {
+		unsafe {
+			let mut bandwidth: u32 = 0;
+
+			let res = bladerf_get_bandwidth(self.device, module, &mut bandwidth as *mut u32);
+
+			handle_res!(res, bandwidth);
+		}
+	}
+
+	pub fn set_lpf_mode(&self, module: bladerf_module, lpf_mode: bladerf_lpf_mode) -> Result<isize, isize> {
+		unsafe {
+			let res = bladerf_set_lpf_mode(self.device, module, lpf_mode);
+
+			handle_res!(res);
+		}
+	}
+
+	pub fn get_lpf_mode(&self, module: bladerf_module) -> Result<bladerf_lpf_mode, isize> {
+		unsafe {
+			let mut lpf_mode: bladerf_lpf_mode = mem::uninitialized();
+
+			let res = bladerf_get_lpf_mode(self.device, module, &mut lpf_mode as *mut bladerf_lpf_mode);
+
+			handle_res!(res, lpf_mode);
+		}
+	}
+
+//bladerf_set_bandwidth (struct bladerf *dev, bladerf_module module, unsigned int bandwidth, unsigned int *actual)
+//bladerf_get_bandwidth (struct bladerf *dev, bladerf_module module, unsigned int *bandwidth)
+//bladerf_set_lpf_mode (struct bladerf *dev, bladerf_module module, bladerf_lpf_mode mode)
+//bladerf_get_lpf_mode (struct bladerf *dev, bladerf_module module, bladerf_lpf_mode *mode)
 
 	// Frequency Tuning
 	// http://www.nuand.com/libbladeRF-doc/v1.7.2/group___f_n___t_u_n_i_n_g.html
@@ -610,7 +653,7 @@ impl BladeRFDevice {
 	pub fn configure_module(&self, module: bladerf_module, config: BladeRFModuleConfig) {
 		BladeRFDevice::set_frequency(self, module, config.frequency).unwrap();
 		BladeRFDevice::set_sample_rate(self, module, config.sample_rate).unwrap();
-		//BladeRFDevice::set_bandwidth(self, module, config.bandwidth).unwrap();
+		BladeRFDevice::set_bandwidth(self, module, config.bandwidth).unwrap();
 		BladeRFDevice::set_lna_gain(self, config.lna_gain).unwrap();
 		match module {
 			bladerf_module::BLADERF_MODULE_RX => {

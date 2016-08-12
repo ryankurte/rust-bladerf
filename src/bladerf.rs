@@ -99,10 +99,14 @@ pub enum bladerf_lna_gain {
 }
 
 #[repr(C)]
+#[derive(Copy)]
 pub enum bladerf_lpf_mode {
     BLADERF_LPF_NORMAL = 0,
     BLADERF_LPF_BYPASSED = 1,
     BLADERF_LPF_DISABLED = 2,
+}
+impl ::std::clone::Clone for bladerf_lpf_mode {
+    fn clone(&self) -> Self { *self }
 }
 
 #[repr(C)]
