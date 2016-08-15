@@ -3,6 +3,8 @@
 extern crate libc;
 
 use libc::*;
+use std::*;
+
 
 pub enum Struct_bladerf { }
 
@@ -38,6 +40,18 @@ impl ::std::clone::Clone for Struct_bladerf_devinfo {
 }
 impl ::std::default::Default for Struct_bladerf_devinfo {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+
+impl Struct_bladerf_devinfo {
+  pub fn serial(&self) -> String {
+      let serial_u8: Vec<u8>= self.serial.iter().map(|&x| x as u8).collect();
+
+      // Build String
+      let serial_cstr = unsafe { ffi::CString::from_vec_unchecked(serial_u8) };
+      let serial_str = serial_cstr.into_string().unwrap();
+
+      return serial_str;
+  }
 }
 
 #[repr(C)]

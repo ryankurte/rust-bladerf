@@ -9,5 +9,13 @@ description = "WIP Rust wrapper for libbladerf"
 readme = "README.md"
 license = "MIT"
 
+[lib]
+name = "bladerf"
+path = "src/lib.rs"
+
+[[bin]]
+name = "bladerf"
+path = "src/bin.rs"
+
 [dependencies]
 libc = "0.1.10"
