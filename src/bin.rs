@@ -2,7 +2,7 @@
 extern crate bladerf;
 
 use std::*;
-use bladerf::*;
+//use bladerf::*;
 
 pub fn main() {
   let devices = bladerf::get_device_list().unwrap();

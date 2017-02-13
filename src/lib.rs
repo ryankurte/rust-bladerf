@@ -3,8 +3,9 @@ extern crate libc;
 use std::*;
 
 #[allow(dead_code, non_camel_case_types)]
-mod bladerf;
-use bladerf::*;
+
+mod libbladerf;
+use libbladerf::*;
 
 // Macro to simplify integer returns
 macro_rules! handle_res {
@@ -49,16 +50,37 @@ pub struct iq {
 
 // BladeRF device object
 pub struct BladeRFDevice {
-   device: *mut Struct_bladerf
+   device: *mut bladerf
 }
 
+impl ::std::default::Default for libbladerf::bladerf_devinfo {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+impl ::std::clone::Clone for libbladerf::bladerf_devinfo {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::marker::Copy for libbladerf::bladerf_devinfo {
+
+}
+
+impl libbladerf::bladerf_devinfo {
+  pub fn serial(&self) -> String {
+      let serial_u8: Vec<u8>= self.serial.iter().map(|&x| x as u8).collect();
+
+      // Build String
+      let serial_cstr = unsafe { ffi::CString::from_vec_unchecked(serial_u8) };
+      let serial_str = serial_cstr.into_string().unwrap();
+
+      return serial_str;
+  }
+}
 
 /***		Static Functions			***/
 
-pub fn get_device_list() -> Result<Vec<Struct_bladerf_devinfo>, isize> {
+pub fn get_device_list() -> Result<Vec<bladerf_devinfo>, isize> {
 
 	unsafe{ 
-		let devices: *mut Struct_bladerf_devinfo = mem::uninitialized();
+		let devices: *mut bladerf_devinfo = mem::uninitialized();
 
 		let n = bladerf_get_device_list(&devices) as isize;
 
@@ -67,7 +89,7 @@ pub fn get_device_list() -> Result<Vec<Struct_bladerf_devinfo>, isize> {
 
 			// Cast array to slice and create a safe array to return
 			let device_slice = std::slice::from_raw_parts(devices, n as usize);
-			let mut safe_device_list: Vec<Struct_bladerf_devinfo> = Vec::new();
+			let mut safe_device_list: Vec<bladerf_devinfo> = Vec::new();
 
 			for i in 0..n {
 				let local_device = device_slice[i as usize];
@@ -88,7 +110,7 @@ pub fn get_device_list() -> Result<Vec<Struct_bladerf_devinfo>, isize> {
 
 pub fn set_usb_reset_on_open(enabled: bool) {
     unsafe{ 
-    	bladerf_set_usb_reset_on_open(enabled as libc::uint8_t); 
+    	bladerf_set_usb_reset_on_open(enabled); 
     } 
 }
 
@@ -111,9 +133,9 @@ pub fn open(identifier: Option<String>) -> Result<BladeRFDevice, isize> {
 	}
 }
 
-pub fn open_with_devinfo(devinfo: &Struct_bladerf_devinfo) -> Result<BladeRFDevice, isize> {
+pub fn open_with_devinfo(devinfo: &bladerf_devinfo) -> Result<BladeRFDevice, isize> {
 
-	let devinfo_ptr: *const Struct_bladerf_devinfo = devinfo as *const Struct_bladerf_devinfo;
+	let devinfo_ptr: *const bladerf_devinfo = devinfo as *const bladerf_devinfo;
 
 	unsafe {
 		let bladerf_device = BladeRFDevice { device: mem::uninitialized() };
@@ -135,10 +157,10 @@ impl BladeRFDevice {
 	pub fn get_serial(&self) -> Result<String, isize> {
 		unsafe {
 			// Create raw data array for serial return
-			let serial_data : Vec<::libc::c_char> = vec![0; 33];
+			let mut serial_data : Vec<::libc::c_char> = vec![0; 33];
 
 			// Call underlying c method
-			let res = bladerf_get_serial(self.device, serial_data.as_ptr());
+			let res = bladerf_get_serial(self.device, serial_data.as_mut_ptr());
 
 			if res >= 0 {
 				// Map ::libc::c_char back to u8 as required for string manipulation
@@ -165,11 +187,11 @@ impl BladeRFDevice {
 		}
 	}
 
-	pub fn fw_version(&self) -> Result<Struct_bladerf_version, isize> {
+	pub fn fw_version(&self) -> Result<bladerf_version, isize> {
 		unsafe {
-			let mut version: Struct_bladerf_version = mem::uninitialized();
+			let mut version: bladerf_version = mem::uninitialized();
 
-			let res = bladerf_fw_version(self.device, &mut version as *mut Struct_bladerf_version);
+			let res = bladerf_fw_version(self.device, &mut version as *mut bladerf_version);
 
 			handle_res!(res, version);
 		}
@@ -189,11 +211,11 @@ impl BladeRFDevice {
 		}
 	}
 
-	pub fn fpga_version(&self) -> Result<Struct_bladerf_version, isize> {
+	pub fn fpga_version(&self) -> Result<bladerf_version, isize> {
 		unsafe {
-			let mut version: Struct_bladerf_version = mem::uninitialized();
+			let mut version: bladerf_version = mem::uninitialized();
 
-			let res = bladerf_fpga_version(self.device, &mut version as *mut Struct_bladerf_version);
+			let res = bladerf_fpga_version(self.device, &mut version as *mut bladerf_version);
 
 			handle_res!(res, version);
 		}
@@ -211,7 +233,7 @@ impl BladeRFDevice {
 
 	pub fn enable_module(&self, module: bladerf_module, enable: bool) -> Result<isize, isize> {
 		unsafe {
-			let res = bladerf_enable_module(self.device, module, enable as u8);
+			let res = bladerf_enable_module(self.device, module, enable);
 
 			handle_res!(res);
 		}
@@ -331,14 +353,14 @@ impl BladeRFDevice {
 		}
 	}
 
-	pub fn set_rational_sample_rate(&self, module: bladerf_module, rate: Struct_bladerf_rational_rate) -> Result<Struct_bladerf_rational_rate, isize> {
+	pub fn set_rational_sample_rate(&self, module: bladerf_module, rate: bladerf_rational_rate) -> Result<bladerf_rational_rate, isize> {
 		let mut rate = rate;
 
 		unsafe {
-			let mut actual: Struct_bladerf_rational_rate = mem::uninitialized();
+			let mut actual: bladerf_rational_rate = mem::uninitialized();
 
-			let res = bladerf_set_rational_sample_rate(self.device, module, &mut rate as *mut Struct_bladerf_rational_rate,
-														&mut actual as *mut Struct_bladerf_rational_rate);
+			let res = bladerf_set_rational_sample_rate(self.device, module, &mut rate as *mut bladerf_rational_rate,
+														&mut actual as *mut bladerf_rational_rate);
 			handle_res!(res, actual);
 		}
 	}
@@ -353,11 +375,11 @@ impl BladeRFDevice {
 		}
 	}
 
-	pub fn get_rational_sample_rate(&self, module: bladerf_module) -> Result<Struct_bladerf_rational_rate, isize> {
+	pub fn get_rational_sample_rate(&self, module: bladerf_module) -> Result<bladerf_rational_rate, isize> {
 		unsafe {
-			let mut rate: Struct_bladerf_rational_rate = mem::uninitialized();
+			let mut rate: bladerf_rational_rate = mem::uninitialized();
 
-			let res = bladerf_get_rational_sample_rate(self.device, module, &mut rate as *mut Struct_bladerf_rational_rate);
+			let res = bladerf_get_rational_sample_rate(self.device, module, &mut rate as *mut bladerf_rational_rate);
 			
 			handle_res!(res, rate);
 		}
@@ -467,11 +489,11 @@ impl BladeRFDevice {
 		}
 	}
 	 
-	pub fn schedule_retune(&self, module: bladerf_module, time: u64, frequency: u32, quick_tune: Option<Struct_bladerf_quick_tune>) -> Result<isize, isize> {
+	pub fn schedule_retune(&self, module: bladerf_module, time: u64, frequency: u32, quick_tune: Option<bladerf_quick_tune>) -> Result<isize, isize> {
 		unsafe {
 
-			let mut quick_tune_int: Struct_bladerf_quick_tune;
-			let p: *mut Struct_bladerf_quick_tune;
+			let mut quick_tune_int: bladerf_quick_tune;
+			let p: *mut bladerf_quick_tune;
 
 			// Check whether quick tune exists and map pointer as appropriate
 			match quick_tune {
@@ -510,11 +532,11 @@ impl BladeRFDevice {
 		}
 	}
 
-	pub fn get_quick_tune(&self, module: bladerf_module) -> Result<Struct_bladerf_quick_tune, isize> {
+	pub fn get_quick_tune(&self, module: bladerf_module) -> Result<bladerf_quick_tune, isize> {
 		unsafe {
-			let mut quick_tune: Struct_bladerf_quick_tune = mem::uninitialized();
+			let mut quick_tune: bladerf_quick_tune = mem::uninitialized();
 
-			let res = bladerf_get_quick_tune(self.device, module, &mut quick_tune as *mut Struct_bladerf_quick_tune); 
+			let res = bladerf_get_quick_tune(self.device, module, &mut quick_tune as *mut bladerf_quick_tune); 
 
 			handle_res!(res, quick_tune);
 		}
@@ -592,11 +614,11 @@ impl BladeRFDevice {
 		}
 	}
 
-	pub fn sync_tx(&self, data: Vec<iq>, meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
+	pub fn sync_tx(&self, data: Vec<iq>, meta: Option<bladerf_metadata>, stream_timeout: u32)
 		       -> Result<isize, isize> {
 
 		// Handle optional meta argument
-		let meta_ptr: *mut Struct_bladerf_metadata = match meta { 
+		let meta_ptr: *mut bladerf_metadata = match meta { 
 			Some(m) => {
 				let mut meta_int = m;
 				&mut meta_int
@@ -605,7 +627,7 @@ impl BladeRFDevice {
 			}
 		};
 
-		let data_ptr: *mut libc::c_void = data.as_ptr() as *mut libc::c_void;
+		let data_ptr: *mut os::raw::c_void = data.as_ptr() as *mut os::raw::c_void;
 
 		unsafe {
 			let res = bladerf_sync_tx(self.device, data_ptr, data.len() as u32, meta_ptr, stream_timeout);
@@ -614,11 +636,11 @@ impl BladeRFDevice {
 		}
 	}
 
-	pub fn sync_rx(&self, data: &mut Vec<iq>, meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
+	pub fn sync_rx(&self, data: &mut Vec<iq>, meta: Option<bladerf_metadata>, stream_timeout: u32)
 		       -> Result<isize, isize> {
 
 		// Handle optional meta argument
-		let meta_ptr: *mut Struct_bladerf_metadata = match meta { 
+		let meta_ptr: *mut bladerf_metadata = match meta { 
 			Some(m) => {
 				let mut meta_int = m;
 				&mut meta_int
@@ -627,7 +649,7 @@ impl BladeRFDevice {
 			}
 		};
 
-		let data_ptr: *mut libc::c_void = data.as_ptr() as *mut libc::c_void;
+		let data_ptr: *mut os::raw::c_void = data.as_ptr() as *mut os::raw::c_void;
 
 		unsafe {
 			let res = bladerf_sync_rx(self.device, data_ptr, data.len() as u32, meta_ptr, stream_timeout);
@@ -663,6 +685,9 @@ impl BladeRFDevice {
 			bladerf_module::BLADERF_MODULE_TX => {
 				BladeRFDevice::set_txvga1(self, config.vga1).unwrap();
 				BladeRFDevice::set_txvga2(self, config.vga2).unwrap();
+			},
+			bladerf_module::BLADERF_MODULE_INVALID => {
+				//TODO: error
 			}
 		};
 		
@@ -674,7 +699,7 @@ impl BladeRFDevice {
 
 #[cfg(test)]
 mod tests {
-	use bladerf::*;
+	use libbladerf::*;
 
 	#[test]
 	fn test_list_devices() {
