@@ -65,6 +65,7 @@ pub enum bladerf_tuning_mode {
 #[repr(C)]
 #[derive(Debug, PartialEq)]
 pub enum bladerf_loopback {
+    BLADERF_LB_NONE = 0,
     BLADERF_LB_FIRMWARE = 1,
     BLADERF_LB_BB_TXLPF_RXVGA2 = 2,
     BLADERF_LB_BB_TXVGA1_RXVGA2 = 3,
@@ -73,7 +74,7 @@ pub enum bladerf_loopback {
     BLADERF_LB_RF_LNA1 = 6,
     BLADERF_LB_RF_LNA2 = 7,
     BLADERF_LB_RF_LNA3 = 8,
-    BLADERF_LB_NONE = 9,
+    BLADERF_LB_RFIC_BIST = 9,
 }
 
 #[repr(C)]
@@ -91,7 +92,7 @@ impl ::std::default::Default for Struct_bladerf_rational_rate {
 }
 
 #[repr(C)]
-#[derive(Copy, PartialEq)]
+#[derive(Copy, PartialEq, Debug)]
 pub enum bladerf_sampling {
     BLADERF_SAMPLING_UNKNOWN = 0,
     BLADERF_SAMPLING_INTERNAL = 1,
@@ -333,14 +334,14 @@ impl ::std::default::Default for Struct_bladerf_lms_dc_cals {
 
 #[link(name = "bladeRF")]
 extern "C" {
-    pub fn bladerf_get_device_list(devices: &*mut Struct_bladerf_devinfo) 
+    pub fn bladerf_get_device_list(devices: *mut *mut Struct_bladerf_devinfo) 
     -> libc::c_int;
-    pub fn bladerf_free_device_list(devices: *mut Struct_bladerf_devinfo)
+    pub fn bladerf_free_device_list(devices: *const Struct_bladerf_devinfo)
     -> ();
-    pub fn bladerf_open_with_devinfo(device: &*mut Struct_bladerf,
+    pub fn bladerf_open_with_devinfo(device: *mut *mut Struct_bladerf,
                                      devinfo: *const Struct_bladerf_devinfo)
      -> ::libc::c_int;
-    pub fn bladerf_open(device:  &*mut Struct_bladerf,
+    pub fn bladerf_open(device:  *mut *mut Struct_bladerf,
                         device_identifier: *const ::libc::c_char)
      -> ::libc::c_int;
     pub fn bladerf_close(device: *mut Struct_bladerf) -> ();
@@ -440,7 +441,7 @@ extern "C" {
                                frequency: ::libc::c_uint) -> ::libc::c_int;
     pub fn bladerf_set_frequency(dev: *mut Struct_bladerf,
                                  module: bladerf_module,
-                                 frequency: ::libc::c_uint) -> ::libc::c_int;
+                                 frequency: u64) -> ::libc::c_int;
     pub fn bladerf_schedule_retune(dev: *mut Struct_bladerf,
                                    module: bladerf_module,
                                    timestamp: uint64_t,
@@ -452,7 +453,7 @@ extern "C" {
      -> ::libc::c_int;
     pub fn bladerf_get_frequency(dev: *mut Struct_bladerf,
                                  module: bladerf_module,
-                                 frequency: *mut ::libc::c_uint)
+                                 frequency: *mut u64)
      -> ::libc::c_int;
     pub fn bladerf_get_quick_tune(dev: *mut Struct_bladerf,
                                   module: bladerf_module,
