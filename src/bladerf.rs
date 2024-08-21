@@ -11,19 +11,19 @@ pub enum Struct_bladerf { }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub enum bladerf_backend {
-    BLADERF_BACKEND_ANY = 0,    
-    BLADERF_BACKEND_LINUX = 1,  
-    BLADERF_BACKEND_LIBUSB = 2, 
-    BLADERF_BACKEND_CYPRESS = 3, 
-    BLADERF_BACKEND_DUMMY = 100,
+    ANY = 0,    
+    LINUX = 1,  
+    LIBUSB = 2, 
+    CYPRESS = 3, 
+    DUMMY = 100,
 }
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub enum bladerf_dev_speed {
-    BLADERF_DEVICE_SPEED_UNKNOWN = 0,
-    BLADERF_DEVICE_SPEED_HIGH = 1,
-    BLADERF_DEVICE_SPEED_SUPER = 2,
+    UNKNOWN = 0,
+    HIGH = 1,
+    SUPER = 2,
 }
 
 #[repr(C)]
@@ -57,24 +57,24 @@ impl Struct_bladerf_devinfo {
 #[repr(C)]
 #[derive(Debug, PartialEq)]
 pub enum bladerf_tuning_mode {
-    BLADERF_TUNING_MODE_INVALID = -1,
-    BLADERF_TUNING_MODE_HOST = 0,
-    BLADERF_TUNING_MODE_FPGA = 1,
+    INVALID = -1,
+    HOST = 0,
+    FPGA = 1,
 }
 
 #[repr(C)]
 #[derive(Debug, PartialEq)]
 pub enum bladerf_loopback {
-    BLADERF_LB_NONE = 0,
-    BLADERF_LB_FIRMWARE = 1,
-    BLADERF_LB_BB_TXLPF_RXVGA2 = 2,
-    BLADERF_LB_BB_TXVGA1_RXVGA2 = 3,
-    BLADERF_LB_BB_TXLPF_RXLPF = 4,
-    BLADERF_LB_BB_TXVGA1_RXLPF = 5,
-    BLADERF_LB_RF_LNA1 = 6,
-    BLADERF_LB_RF_LNA2 = 7,
-    BLADERF_LB_RF_LNA3 = 8,
-    BLADERF_LB_RFIC_BIST = 9,
+    NONE = 0,
+    FIRMWARE = 1,
+    BB_TXLPF_RXVGA2 = 2,
+    BB_TXVGA1_RXVGA2 = 3,
+    BB_TXLPF_RXLPF = 4,
+    BB_TXVGA1_RXLPF = 5,
+    RF_LNA1 = 6,
+    RF_LNA2 = 7,
+    RF_LNA3 = 8,
+    RFIC_BIST = 9,
 }
 
 #[repr(C)]
@@ -94,9 +94,9 @@ impl ::std::default::Default for Struct_bladerf_rational_rate {
 #[repr(C)]
 #[derive(Copy, PartialEq, Debug)]
 pub enum bladerf_sampling {
-    BLADERF_SAMPLING_UNKNOWN = 0,
-    BLADERF_SAMPLING_INTERNAL = 1,
-    BLADERF_SAMPLING_EXTERNAL = 2,
+    UNKNOWN = 0,
+    INTERNAL = 1,
+    EXTERNAL = 2,
 }
 impl ::std::clone::Clone for bladerf_sampling {
     fn clone(&self) -> Self { *self }
@@ -107,18 +107,18 @@ impl ::std::default::Default for bladerf_sampling {
 
 #[repr(C)]
 pub enum bladerf_lna_gain {
-    BLADERF_LNA_GAIN_UNKNOWN = 0,
-    BLADERF_LNA_GAIN_BYPASS = 1,
-    BLADERF_LNA_GAIN_MID = 2,
-    BLADERF_LNA_GAIN_MAX = 3,
+    UNKNOWN = 0,
+    BYPASS = 1,
+    MID = 2,
+    MAX = 3,
 }
 
 #[repr(C)]
 #[derive(Copy)]
 pub enum bladerf_lpf_mode {
-    BLADERF_LPF_NORMAL = 0,
-    BLADERF_LPF_BYPASSED = 1,
-    BLADERF_LPF_DISABLED = 2,
+    NORMAL = 0,
+    BYPASSED = 1,
+    DISABLED = 2,
 }
 impl ::std::clone::Clone for bladerf_lpf_mode {
     fn clone(&self) -> Self { *self }
@@ -127,8 +127,10 @@ impl ::std::clone::Clone for bladerf_lpf_mode {
 #[repr(C)]
 #[derive(Copy)]
 pub enum bladerf_module {
-    BLADERF_MODULE_RX = 0,
-    BLADERF_MODULE_TX = 1,
+    RX0 = 0,
+    TX0 = 1,
+    RX1 = 2,
+    TX1 = 3,
 }
 impl ::std::clone::Clone for bladerf_module {
     fn clone(&self) -> Self { *self }
@@ -136,25 +138,25 @@ impl ::std::clone::Clone for bladerf_module {
 
 #[repr(C)]
 pub enum bladerf_xb {
-    BLADERF_XB_NONE = 0,
-    BLADERF_XB_100 = 1,
-    BLADERF_XB_200 = 2,
+    NONE = 0,
+    XB_100 = 1,
+    XB_200 = 2,
 }
 
 #[repr(C)]
 pub enum bladerf_xb200_filter {
-    BLADERF_XB200_50M = 0,
-    BLADERF_XB200_144M = 1,
-    BLADERF_XB200_222M = 2,
-    BLADERF_XB200_CUSTOM = 3,
-    BLADERF_XB200_AUTO_1DB = 4,
-    BLADERF_XB200_AUTO_3DB = 5,
+    FILTER_50M = 0,
+    FILTER_144M = 1,
+    FILTER_222M = 2,
+    CUSTOM = 3,
+    AUTO_1DB = 4,
+    AUTO_3DB = 5,
 }
 
 #[repr(C)]
 pub enum bladerf_xb200_path {
-    BLADERF_XB200_BYPASS = 0,
-    BLADERF_XB200_MIX = 1,
+    BYPASS = 0,
+    MIX = 1,
 }
 
 #[repr(C)]
@@ -175,45 +177,48 @@ impl ::std::default::Default for Struct_bladerf_quick_tune {
 
 #[repr(C)]
 pub enum bladerf_cal_module {
-    BLADERF_DC_CAL_LPF_TUNING = 0,
-    BLADERF_DC_CAL_TX_LPF = 1,
-    BLADERF_DC_CAL_RX_LPF = 2,
-    BLADERF_DC_CAL_RXVGA2 = 3,
+    LPF_TUNING = 0,
+    TX_LPF = 1,
+    RX_LPF = 2,
+    RXVGA2 = 3,
 }
 
 #[repr(C)]
 pub enum bladerf_correction {
-    BLADERF_CORR_LMS_DCOFF_I = 0,
-    BLADERF_CORR_LMS_DCOFF_Q = 1,
-    BLADERF_CORR_FPGA_PHASE = 2,
-    BLADERF_CORR_FPGA_GAIN = 3,
+    LMS_DCOFF_I = 0,
+    LMS_DCOFF_Q = 1,
+    FPGA_PHASE = 2,
+    FPGA_GAIN = 3,
 }
 
 #[repr(C)]
 pub enum bladerf_format {
-    BLADERF_FORMAT_SC16_Q11 = 0,
-    BLADERF_FORMAT_SC16_Q11_META = 1,
+    SC16_Q11 = 0,
+    SC16_Q11_META = 1,
+    PACKET_META = 2,
+    SC8_Q7 = 3,
+    SC8_Q7_META = 4,
 }
 
 pub enum bladerf_error {
-    BLADERF_ERR_UNEXPECTED  = -1,
-    BLADERF_ERR_RANGE       = -2,
-    BLADERF_ERR_INVAL       = -3,
-    BLADERF_ERR_MEM         = -4,
-    BLADERF_ERR_IO          = -5,
-    BLADERF_ERR_TIMEOUT     = -6,
-    BLADERF_ERR_NODEV       = -7,
-    BLADERF_ERR_UNSUPPORTED = -8,
-    BLADERF_ERR_MISALIGNED  = -9,
-    BLADERF_ERR_CHECKSUM    = -10,
-    BLADERF_ERR_NO_FILE     = -11,
-    BLADERF_ERR_UPDATE_FPGA = -12,
-    BLADERF_ERR_UPDATE_FW   = -13,
-    BLADERF_ERR_TIME_PAST   = -14,
-    BLADERF_ERR_QUEUE_FULL  = -15,
-    BLADERF_ERR_FPGA_OP     = -16,
-    BLADERF_ERR_PERMISSION  = -17,
-    BLADERF_ERR_WOULD_BLOCK = -18,
+    UNEXPECTED  = -1,
+    RANGE       = -2,
+    INVAL       = -3,
+    MEM         = -4,
+    IO          = -5,
+    TIMEOUT     = -6,
+    NODEV       = -7,
+    UNSUPPORTED = -8,
+    MISALIGNED  = -9,
+    CHECKSUM    = -10,
+    NO_FILE     = -11,
+    UPDATE_FPGA = -12,
+    UPDATE_FW   = -13,
+    TIME_PAST   = -14,
+    QUEUE_FULL  = -15,
+    FPGA_OP     = -16,
+    PERMISSION  = -17,
+    WOULD_BLOCK = -18,
 }
 
 #[repr(C)]
@@ -259,35 +264,44 @@ impl ::std::default::Default for Struct_bladerf_version {
 
 #[repr(C)]
 pub enum bladerf_fpga_size {
-    BLADERF_FPGA_UNKNOWN = 0,
-    BLADERF_FPGA_40KLE = 40,
-    BLADERF_FPGA_115KLE = 115,
+    UNKNOWN = 0,
+    FPGA_40KLE = 40,
+    FPGA_115KLE = 115,
 }
 
 #[repr(C)]
 pub enum bladerf_log_level {
-    BLADERF_LOG_LEVEL_VERBOSE = 0,
-    BLADERF_LOG_LEVEL_DEBUG = 1,
-    BLADERF_LOG_LEVEL_INFO = 2,
-    BLADERF_LOG_LEVEL_WARNING = 3,
-    BLADERF_LOG_LEVEL_ERROR = 4,
-    BLADERF_LOG_LEVEL_CRITICAL = 5,
-    BLADERF_LOG_LEVEL_SILENT = 6,
+    VERBOSE = 0,
+    DEBUG = 1,
+    INFO = 2,
+    WARNING = 3,
+    ERROR = 4,
+    CRITICAL = 5,
+    SILENT = 6,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub enum bladerf_channel_layout {
+    RX_X1 = 0,
+    TX_X1 = 1,
+    RX_X2 = 2,
+    TX_X2 = 3,
 }
 
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub enum bladerf_image_type {
-    BLADERF_IMAGE_TYPE_INVALID= -1,
-    BLADERF_IMAGE_TYPE_RAW = 0,
-    BLADERF_IMAGE_TYPE_FIRMWARE = 1,
-    BLADERF_IMAGE_TYPE_FPGA_40KLE = 2,
-    BLADERF_IMAGE_TYPE_FPGA_115KLE = 3,
-    BLADERF_IMAGE_TYPE_CALIBRATION = 4,
-    BLADERF_IMAGE_TYPE_RX_DC_CAL = 5,
-    BLADERF_IMAGE_TYPE_TX_DC_CAL = 6,
-    BLADERF_IMAGE_TYPE_RX_IQ_CAL = 7,
-    BLADERF_IMAGE_TYPE_TX_IQ_CAL = 8,
+    INVALID= -1,
+    RAW = 0,
+    FIRMWARE = 1,
+    FPGA_40KLE = 2,
+    FPGA_115KLE = 3,
+    CALIBRATION = 4,
+    RX_DC_CAL = 5,
+    TX_DC_CAL = 6,
+    RX_IQ_CAL = 7,
+    TX_IQ_CAL = 8,
 }
 
 #[repr(C)]
@@ -507,7 +521,8 @@ extern "C" {
                                       timeout: *mut ::libc::c_uint)
      -> ::libc::c_int;
     pub fn bladerf_sync_config(dev: *mut Struct_bladerf,
-                               module: bladerf_module, format: bladerf_format,
+                               layout: bladerf_channel_layout,
+                               format: bladerf_format,
                                num_buffers: ::libc::c_uint,
                                buffer_size: ::libc::c_uint,
                                num_transfers: ::libc::c_uint,

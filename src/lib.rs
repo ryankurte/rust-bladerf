@@ -5,7 +5,11 @@ use std::mem::*;
 
 #[allow(dead_code, non_camel_case_types)]
 mod bladerf;
-use bladerf::*;
+pub use bladerf::*;
+
+pub use bladerf::bladerf_module;
+pub use bladerf::bladerf_channel_layout;
+pub use bladerf::bladerf_format;
 
 // Macro to simplify integer returns
 macro_rules! handle_res {
@@ -43,6 +47,7 @@ pub struct BladeRFConfig {
 
 #[repr(C)]
 #[repr(packed)]
+#[derive(Copy, Clone)]
 pub struct iq {
 	pub i: i16,
 	pub q: i16
@@ -51,6 +56,14 @@ pub struct iq {
 // BladeRF device object
 pub struct BladeRFDevice {
 	device: MaybeUninit<*mut Struct_bladerf>,
+}
+
+unsafe impl Send for BladeRFDevice {
+
+}
+
+unsafe impl Sync for BladeRFDevice {
+
 }
 
 impl Drop for BladeRFDevice {
@@ -165,7 +178,7 @@ impl BladeRFDevice {
 	}
 
 	pub fn get_fpga_size(&self) -> Result<bladerf_fpga_size, isize> {
-		let mut fpga_size: bladerf_fpga_size = bladerf_fpga_size::BLADERF_FPGA_UNKNOWN;
+		let mut fpga_size: bladerf_fpga_size = bladerf_fpga_size::UNKNOWN;
 
 		unsafe {
 			let res = bladerf_get_fpga_size(self.device.assume_init(), &mut fpga_size);
@@ -246,7 +259,7 @@ impl BladeRFDevice {
 
 	pub fn get_lna_gain(&self) -> Result<bladerf_lna_gain, isize> {
 		unsafe {
-			let mut gain: bladerf_lna_gain = bladerf_lna_gain::BLADERF_LNA_GAIN_UNKNOWN;
+			let mut gain: bladerf_lna_gain = bladerf_lna_gain::UNKNOWN;
 
 			let res = bladerf_get_lna_gain(self.device.assume_init(), &mut gain); 
 
@@ -419,7 +432,7 @@ impl BladeRFDevice {
 
 	pub fn get_sampling(&self) -> Result<bladerf_sampling, isize> {
 		unsafe {
-			let mut sampling = bladerf_sampling::BLADERF_SAMPLING_UNKNOWN;
+			let mut sampling = bladerf_sampling::UNKNOWN;
 
 			let res = bladerf_get_sampling(self.device.assume_init(), &mut sampling);
 
@@ -460,7 +473,7 @@ impl BladeRFDevice {
 
 	pub fn get_lpf_mode(&self, module: bladerf_module) -> Result<bladerf_lpf_mode, isize> {
 		unsafe {
-			let mut lpf_mode = bladerf_lpf_mode::BLADERF_LPF_NORMAL;
+			let mut lpf_mode = bladerf_lpf_mode::NORMAL;
 
 			let res = bladerf_get_lpf_mode(
 				self.device.assume_init(),
@@ -577,7 +590,7 @@ impl BladeRFDevice {
 
 	pub fn get_loopback(&self) -> Result<bladerf_loopback, isize> {
 		unsafe {
-			let mut loopback = bladerf_loopback::BLADERF_LB_NONE;
+			let mut loopback = bladerf_loopback::NONE;
 			let res = bladerf_get_loopback(self.device.assume_init(), &mut loopback);
 			handle_res!(res, loopback);			
 		}
@@ -612,20 +625,28 @@ impl BladeRFDevice {
 
 	// Synchronous data transmission and reception	
 
-	pub fn sync_config(&self, module: bladerf_module, format: bladerf_format,
+	pub fn sync_config(&self, layout: bladerf_channel_layout, format: bladerf_format,
 					   num_buffers: u32, buffer_size: u32, num_transfers: Option<u32>, stream_timeout: u32)
 					   -> Result<isize, isize> {
 
 		let num_transfers = match num_transfers { Some(t) => t, None => 4};
 
 		unsafe {
-			let res = bladerf_sync_config(self.device.assume_init(), module, format, num_buffers, buffer_size, num_transfers, stream_timeout);
+			let res = bladerf_sync_config(
+				self.device.assume_init(),
+				layout,
+				format,
+				num_buffers,
+				buffer_size,
+				num_transfers,
+				stream_timeout
+			);
 		
 			handle_res!(res);
 		}
 	}
 
-	pub fn sync_tx(&self, data: Vec<iq>, meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
+	pub fn sync_tx(&self, data: &Vec<iq>, meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
 		       -> Result<isize, isize> {
 
 		// Handle optional meta argument
@@ -689,14 +710,22 @@ impl BladeRFDevice {
 		BladeRFDevice::set_bandwidth(self, module, config.bandwidth).unwrap();
 		BladeRFDevice::set_lna_gain(self, config.lna_gain).unwrap();
 		match module {
-			bladerf_module::BLADERF_MODULE_RX => {
+			bladerf_module::RX0 => {
 				BladeRFDevice::set_rxvga1(self, config.vga1).unwrap();
 				BladeRFDevice::set_rxvga2(self, config.vga2).unwrap();
 			},
-			bladerf_module::BLADERF_MODULE_TX => {
+			bladerf_module::TX0 => {
 				BladeRFDevice::set_txvga1(self, config.vga1).unwrap();
 				BladeRFDevice::set_txvga2(self, config.vga2).unwrap();
-			}
+			},
+			bladerf_module::RX1 => {
+				BladeRFDevice::set_rxvga1(self, config.vga1).unwrap();
+				BladeRFDevice::set_rxvga2(self, config.vga2).unwrap();
+			},
+			bladerf_module::TX1 => {
+				BladeRFDevice::set_txvga1(self, config.vga1).unwrap();
+				BladeRFDevice::set_txvga2(self, config.vga2).unwrap();
+			},
 		};
 		
 	}
