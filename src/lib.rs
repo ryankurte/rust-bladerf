@@ -1,7 +1,10 @@
 extern crate libc;
+extern crate num_complex;
 
 use std::*;
 use std::mem::*;
+
+use num_complex::Complex;
 
 #[allow(dead_code, non_camel_case_types)]
 mod bladerf;
@@ -43,14 +46,6 @@ pub struct BladeRFModuleConfig {
 pub struct BladeRFConfig {
 	pub tx: BladeRFModuleConfig,
 	pub rx: BladeRFModuleConfig
-}
-
-#[repr(C)]
-#[repr(packed)]
-#[derive(Copy, Clone)]
-pub struct iq {
-	pub i: i16,
-	pub q: i16
 }
 
 // BladeRF device object
@@ -646,7 +641,7 @@ impl BladeRFDevice {
 		}
 	}
 
-	pub fn sync_tx(&self, data: &Vec<iq>, meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
+	pub fn sync_tx(&self, data: &Vec<Complex<i16>>, meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
 		       -> Result<isize, isize> {
 
 		// Handle optional meta argument
@@ -668,7 +663,7 @@ impl BladeRFDevice {
 		}
 	}
 
-	pub fn sync_rx(&self, data: &mut Vec<iq>, meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
+	pub fn sync_rx(&self, data: &mut Vec<Complex<i16>>, meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
 		       -> Result<isize, isize> {
 
 		// Handle optional meta argument

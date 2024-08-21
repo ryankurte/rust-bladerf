@@ -19,3 +19,4 @@ path = "src/bin.rs"
 
 [dependencies]
 libc = "0.1.10"
+num-complex = "0.4.6"
