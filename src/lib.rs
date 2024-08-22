@@ -663,7 +663,7 @@ impl BladeRFDevice {
 		}
 	}
 
-	pub fn sync_rx(&self, data: &mut Vec<Complex<i16>>, meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
+	pub fn sync_rx(&self, data: &mut [Complex<i16>], meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
 		       -> Result<isize, isize> {
 
 		// Handle optional meta argument
