@@ -13,6 +13,10 @@ pub use bladerf::*;
 pub use bladerf::bladerf_module;
 pub use bladerf::bladerf_channel_layout;
 pub use bladerf::bladerf_format;
+pub use bladerf::Struct_bladerf_metadata;
+pub use bladerf::bladerf_meta;
+pub use bladerf::bladerf_meta_rx;
+pub use bladerf::bladerf_meta_tx;
 
 // Macro to simplify integer returns
 macro_rules! handle_res {
@@ -641,47 +645,72 @@ impl BladeRFDevice {
 		}
 	}
 
-	pub fn sync_tx(&self, data: &Vec<Complex<i16>>, meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
+	pub fn sync_tx_meta(&self, data: &Vec<Complex<i16>>, meta: &mut Struct_bladerf_metadata, stream_timeout: u32)
 		       -> Result<isize, isize> {
-
-		// Handle optional meta argument
-		let meta_ptr: *mut Struct_bladerf_metadata = match meta { 
-			Some(m) => {
-				let mut meta_int = m;
-				&mut meta_int
-			}, None => {
-				ptr::null_mut()
-			}
-		};
 
 		let data_ptr: *mut libc::c_void = data.as_ptr() as *mut libc::c_void;
 
 		unsafe {
-			let res = bladerf_sync_tx(self.device.assume_init(), data_ptr, data.len() as u32, meta_ptr, stream_timeout);
+			let res = bladerf_sync_tx(
+				self.device.assume_init(),
+				data_ptr,
+				data.len() as u32,
+				meta as *mut Struct_bladerf_metadata,
+				stream_timeout
+			);
 		
 			handle_res!(res);
 		}
-	}
+	}	
 
-	pub fn sync_rx(&self, data: &mut [Complex<i16>], meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
+	pub fn sync_tx(&self, data: &Vec<Complex<i16>>, stream_timeout: u32)
 		       -> Result<isize, isize> {
-
-		// Handle optional meta argument
-		let meta_ptr: *mut Struct_bladerf_metadata = match meta { 
-			Some(m) => {
-				let mut meta_int = m;
-				&mut meta_int
-			}, None => {
-				ptr::null_mut()
-			}
-		};
 
 		let data_ptr: *mut libc::c_void = data.as_ptr() as *mut libc::c_void;
 
 		unsafe {
-			let res = bladerf_sync_rx(self.device.assume_init(), data_ptr, data.len() as u32, meta_ptr, stream_timeout);
+			let res = bladerf_sync_tx(
+				self.device.assume_init(),
+				data_ptr, data.len() as u32,
+				ptr::null_mut(),
+				stream_timeout
+			);
 		
-			handle_res!(res);
+			handle_res!(res)
+		}
+	}
+
+	pub fn sync_rx_meta(&self, data: &mut [Complex<i16>], meta: &mut Struct_bladerf_metadata, stream_timeout: u32)
+		       -> Result<isize, isize> {
+		let data_ptr: *mut libc::c_void = data.as_ptr() as *mut libc::c_void;
+
+		unsafe {
+			let res = bladerf_sync_rx(
+				self.device.assume_init(),
+				data_ptr,
+				data.len() as u32,
+				meta as *mut Struct_bladerf_metadata,
+				stream_timeout
+			);
+		
+			handle_res!(res)
+		}
+	}	
+
+	pub fn sync_rx(&self, data: &mut [Complex<i16>], stream_timeout: u32)
+		       -> Result<isize, isize> {
+		let data_ptr: *mut libc::c_void = data.as_ptr() as *mut libc::c_void;
+
+		unsafe {
+			let res = bladerf_sync_rx(
+				self.device.assume_init(),
+				data_ptr,
+				data.len() as u32,
+				ptr::null_mut(),
+				stream_timeout
+			);
+		
+			handle_res!(res)
 		}
 	}
 
