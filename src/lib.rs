@@ -645,6 +645,15 @@ impl BladeRFDevice {
 		}
 	}
 
+	pub fn get_timestamp(&self, module: bladerf_module) -> u64 {
+		let mut value = 0u64;
+		unsafe {
+			bladerf_get_timestamp(self.device.assume_init(), module, &mut value as *mut u64);
+		}
+
+		value
+	}
+
 	pub fn sync_tx_meta(&self, data: &Vec<Complex<i16>>, meta: &mut Struct_bladerf_metadata, stream_timeout: u32)
 		       -> Result<isize, isize> {
 
