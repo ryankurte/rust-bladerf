@@ -34,6 +34,8 @@ pub struct Struct_bladerf_devinfo {
     pub usb_bus: uint8_t,
     pub usb_addr: uint8_t,
     pub instance: ::libc::c_uint,
+    pub manufacturer: [::libc::c_char; 33],
+    pub product: [::libc::c_char; 33],
 }
 impl ::std::clone::Clone for Struct_bladerf_devinfo {
     fn clone(&self) -> Self { *self }

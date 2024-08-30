@@ -833,18 +833,18 @@ mod tests {
 
 		// Check initial is none
 		let loopback = device.get_loopback().unwrap();
-		assert!(loopback == bladerf_loopback::BLADERF_LB_NONE);
+		assert!(loopback == bladerf_loopback::NONE);
 
 		// Set and check loopback modes
-		device.set_loopback(bladerf_loopback::BLADERF_LB_FIRMWARE).unwrap();
+		device.set_loopback(bladerf_loopback::FIRMWARE).unwrap();
 		let loopback = device.get_loopback().unwrap();
-		assert!(loopback == bladerf_loopback::BLADERF_LB_FIRMWARE);
+		assert!(loopback == bladerf_loopback::FIRMWARE);
 
 		// Reset
-		device.set_loopback(bladerf_loopback::BLADERF_LB_NONE).unwrap();
+		device.set_loopback(bladerf_loopback::NONE).unwrap();
 
 		let loopback = device.get_loopback().unwrap();
-		assert!(loopback == bladerf_loopback::BLADERF_LB_NONE);
+		assert!(loopback == bladerf_loopback::NONE);
 	}
 
 	#[test]
@@ -854,8 +854,8 @@ mod tests {
 		let freq: u64 = 915000000;
 
 		// Set and check frequency
-		device.set_frequency(bladerf_module::BLADERF_MODULE_RX, freq).unwrap();
-		let actual_freq = device.get_frequency(bladerf_module::BLADERF_MODULE_RX).unwrap();
+		device.set_frequency(bladerf_module::RX0, freq).unwrap();
+		let actual_freq = device.get_frequency(bladerf_module::RX0).unwrap();
 		let diff = freq as i64 - actual_freq as i64;
 		assert!(i64::abs(diff) < 10);
 	}
@@ -864,7 +864,7 @@ mod tests {
 	fn test_set_sampling() {
 		let device = super::open(None).unwrap();
 
-		let sampling: bladerf_sampling = bladerf_sampling::BLADERF_SAMPLING_INTERNAL;
+		let sampling: bladerf_sampling = bladerf_sampling::INTERNAL;
 
 		// Set and check frequency
 		match device.set_sampling(sampling) {
