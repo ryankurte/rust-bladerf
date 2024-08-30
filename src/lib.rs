@@ -652,7 +652,7 @@ impl BladeRFDevice {
 		value
 	}
 
-	pub fn sync_tx_meta(&self, data: &Vec<Complex<i16>>, meta: &mut Struct_bladerf_metadata, stream_timeout: u32)
+	pub fn sync_tx_meta(&self, data: &[Complex<i16>], meta: &mut Struct_bladerf_metadata, stream_timeout: u32)
 		       -> Result<isize, isize> {
 
 		let data_ptr: *mut libc::c_void = data.as_ptr() as *mut libc::c_void;
@@ -670,7 +670,7 @@ impl BladeRFDevice {
 		}
 	}	
 
-	pub fn sync_tx(&self, data: &Vec<Complex<i16>>, stream_timeout: u32)
+	pub fn sync_tx(&self, data: &[Complex<i16>], stream_timeout: u32)
 		       -> Result<isize, isize> {
 
 		let data_ptr: *mut libc::c_void = data.as_ptr() as *mut libc::c_void;
