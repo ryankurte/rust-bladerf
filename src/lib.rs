@@ -115,18 +115,16 @@ pub fn set_usb_reset_on_open(enabled: bool) {
 
 pub fn open(identifier: Option<String>) -> Result<BladeRFDevice, isize> {
 	unsafe {
-		let id_ptr = match identifier {
-			Some(id) => {
-				let c_string = ffi::CString::new(id.into_bytes()).unwrap();
-				c_string.as_ptr()
-			}, None => {
-				ptr::null()
-			}
-		};
-
 		let mut bladerf_device = BladeRFDevice { device: MaybeUninit::uninit() };
 
-		let res = bladerf_open(bladerf_device.device.as_mut_ptr(), id_ptr);
+		
+		let res = match identifier {
+			Some(id) => {
+				let c_string = ffi::CString::new(id).unwrap();
+				bladerf_open(bladerf_device.device.as_mut_ptr(), c_string.as_ptr())
+			},
+			None => bladerf_open(bladerf_device.device.as_mut_ptr(), ptr::null()),
+		};
 
 		handle_res!(res, bladerf_device);
 	}
