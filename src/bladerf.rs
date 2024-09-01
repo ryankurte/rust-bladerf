@@ -461,8 +461,13 @@ extern "C" {
      -> ::libc::c_int;
     pub fn bladerf_get_bandwidth(dev: *mut Struct_bladerf,
                                  module: bladerf_module,
-                                 bandwidth: *mut ::libc::c_uint)
-     -> ::libc::c_int;
+                                 bandwidth: *mut ::libc::c_uint) -> ::libc::c_int;
+    pub fn bladerf_get_bias_tee(dev: *mut Struct_bladerf,
+                                module: bladerf_module,
+                                enable: *mut bool) -> ::libc::c_int;
+    pub fn bladerf_set_bias_tee(dev: *mut Struct_bladerf,
+                                module: bladerf_module,
+                                enable: bool) -> ::libc::c_int;
     pub fn bladerf_set_lpf_mode(dev: *mut Struct_bladerf,
                                 module: bladerf_module,
                                 mode: bladerf_lpf_mode) -> ::libc::c_int;

@@ -733,6 +733,29 @@ impl BladeRFDevice {
 		}
 	}
 
+	/*
+    pub fn bladerf_get_bias_tee(dev: *mut Struct_bladerf,
+		module: bladerf_module,
+		enable: *mut bool) -> ::libc::c_int;
+	pub fn bladerf_set_bias_tee(dev: *mut Struct_bladerf,
+			module: bladerf_module,
+			enable: bool) -> ::libc::c_int;
+	*/
+
+	pub fn get_bias_tee(&self, module: bladerf_module) -> Result<bool, isize>  {
+		unsafe {
+			let mut value = false;
+			let res = bladerf_get_bias_tee(self.device.assume_init(), module, &mut value);
+			handle_res!(res, value)
+		}
+	}
+
+	pub fn set_bias_tee(&self, module: bladerf_module, enable: bool) -> Result<isize, isize> {
+		unsafe {
+			let res = bladerf_set_bias_tee(self.device.assume_init(), module, enable);
+			handle_res!(res)
+		}
+	}	
 
 	// Higher level control
 	pub fn configure_module(&self, module: bladerf_module, config: BladeRFModuleConfig) {
