@@ -34,6 +34,8 @@ pub struct Struct_bladerf_devinfo {
     pub usb_bus: uint8_t,
     pub usb_addr: uint8_t,
     pub instance: ::libc::c_uint,
+    pub manufacturer: [::libc::c_char; 33],
+    pub product: [::libc::c_char; 33],
 }
 impl ::std::clone::Clone for Struct_bladerf_devinfo {
     fn clone(&self) -> Self { *self }
@@ -221,8 +223,27 @@ pub enum bladerf_error {
     WOULD_BLOCK = -18,
 }
 
+pub enum bladerf_meta {
+    STATUS_OVERRUN = 1,
+    STATUS_UNDERUN = 2,
+    FLAG_HW_MINIEXP1 = 65536,
+    FLAG_HW_MINIEXP2 = 131072,
+}
+
+pub enum bladerf_meta_tx {
+    FLAG_TX_BURST_START = 1,
+    FLAG_TX_BURST_END = 2,
+    FLAG_TX_NOW = 4,
+    FLAG_TX_UPDATE_TIMESTAMP = 8,
+}
+
+pub enum bladerf_meta_rx {
+    FLAG_RX_NOW = 2147483648,
+    FLAG_RX_HW_UNDERFLOW = 1,
+}
+
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Clone)]
 pub struct Struct_bladerf_metadata {
     pub timestamp: uint64_t,
     pub flags: uint32_t,
@@ -230,9 +251,7 @@ pub struct Struct_bladerf_metadata {
     pub actual_count: ::libc::c_uint,
     pub reserved: [uint8_t; 32usize],
 }
-impl ::std::clone::Clone for Struct_bladerf_metadata {
-    fn clone(&self) -> Self { *self }
-}
+
 impl ::std::default::Default for Struct_bladerf_metadata {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
@@ -442,8 +461,13 @@ extern "C" {
      -> ::libc::c_int;
     pub fn bladerf_get_bandwidth(dev: *mut Struct_bladerf,
                                  module: bladerf_module,
-                                 bandwidth: *mut ::libc::c_uint)
-     -> ::libc::c_int;
+                                 bandwidth: *mut ::libc::c_uint) -> ::libc::c_int;
+    pub fn bladerf_get_bias_tee(dev: *mut Struct_bladerf,
+                                module: bladerf_module,
+                                enable: *mut bool) -> ::libc::c_int;
+    pub fn bladerf_set_bias_tee(dev: *mut Struct_bladerf,
+                                module: bladerf_module,
+                                enable: bool) -> ::libc::c_int;
     pub fn bladerf_set_lpf_mode(dev: *mut Struct_bladerf,
                                 module: bladerf_module,
                                 mode: bladerf_lpf_mode) -> ::libc::c_int;

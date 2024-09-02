@@ -13,6 +13,10 @@ pub use bladerf::*;
 pub use bladerf::bladerf_module;
 pub use bladerf::bladerf_channel_layout;
 pub use bladerf::bladerf_format;
+pub use bladerf::Struct_bladerf_metadata;
+pub use bladerf::bladerf_meta;
+pub use bladerf::bladerf_meta_rx;
+pub use bladerf::bladerf_meta_tx;
 
 // Macro to simplify integer returns
 macro_rules! handle_res {
@@ -111,18 +115,16 @@ pub fn set_usb_reset_on_open(enabled: bool) {
 
 pub fn open(identifier: Option<String>) -> Result<BladeRFDevice, isize> {
 	unsafe {
-		let id_ptr = match identifier {
-			Some(id) => {
-				let c_string = ffi::CString::new(id.into_bytes()).unwrap();
-				c_string.as_ptr()
-			}, None => {
-				ptr::null()
-			}
-		};
-
 		let mut bladerf_device = BladeRFDevice { device: MaybeUninit::uninit() };
 
-		let res = bladerf_open(bladerf_device.device.as_mut_ptr(), id_ptr);
+		
+		let res = match identifier {
+			Some(id) => {
+				let c_string = ffi::CString::new(id).unwrap();
+				bladerf_open(bladerf_device.device.as_mut_ptr(), c_string.as_ptr())
+			},
+			None => bladerf_open(bladerf_device.device.as_mut_ptr(), ptr::null()),
+		};
 
 		handle_res!(res, bladerf_device);
 	}
@@ -641,47 +643,81 @@ impl BladeRFDevice {
 		}
 	}
 
-	pub fn sync_tx(&self, data: &Vec<Complex<i16>>, meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
-		       -> Result<isize, isize> {
+	pub fn get_timestamp(&self, module: bladerf_module) -> u64 {
+		let mut value = 0u64;
+		unsafe {
+			bladerf_get_timestamp(self.device.assume_init(), module, &mut value as *mut u64);
+		}
 
-		// Handle optional meta argument
-		let meta_ptr: *mut Struct_bladerf_metadata = match meta { 
-			Some(m) => {
-				let mut meta_int = m;
-				&mut meta_int
-			}, None => {
-				ptr::null_mut()
-			}
-		};
+		value
+	}
+
+	pub fn sync_tx_meta(&self, data: &[Complex<i16>], meta: &mut Struct_bladerf_metadata, stream_timeout: u32)
+		       -> Result<isize, isize> {
 
 		let data_ptr: *mut libc::c_void = data.as_ptr() as *mut libc::c_void;
 
 		unsafe {
-			let res = bladerf_sync_tx(self.device.assume_init(), data_ptr, data.len() as u32, meta_ptr, stream_timeout);
+			let res = bladerf_sync_tx(
+				self.device.assume_init(),
+				data_ptr,
+				data.len() as u32,
+				meta as *mut Struct_bladerf_metadata,
+				stream_timeout
+			);
 		
 			handle_res!(res);
 		}
-	}
+	}	
 
-	pub fn sync_rx(&self, data: &mut Vec<Complex<i16>>, meta: Option<Struct_bladerf_metadata>, stream_timeout: u32)
+	pub fn sync_tx(&self, data: &[Complex<i16>], stream_timeout: u32)
 		       -> Result<isize, isize> {
-
-		// Handle optional meta argument
-		let meta_ptr: *mut Struct_bladerf_metadata = match meta { 
-			Some(m) => {
-				let mut meta_int = m;
-				&mut meta_int
-			}, None => {
-				ptr::null_mut()
-			}
-		};
 
 		let data_ptr: *mut libc::c_void = data.as_ptr() as *mut libc::c_void;
 
 		unsafe {
-			let res = bladerf_sync_rx(self.device.assume_init(), data_ptr, data.len() as u32, meta_ptr, stream_timeout);
+			let res = bladerf_sync_tx(
+				self.device.assume_init(),
+				data_ptr, data.len() as u32,
+				ptr::null_mut(),
+				stream_timeout
+			);
 		
-			handle_res!(res);
+			handle_res!(res)
+		}
+	}
+
+	pub fn sync_rx_meta(&self, data: &mut [Complex<i16>], meta: &mut Struct_bladerf_metadata, stream_timeout: u32)
+		       -> Result<isize, isize> {
+		let data_ptr: *mut libc::c_void = data.as_ptr() as *mut libc::c_void;
+
+		unsafe {
+			let res = bladerf_sync_rx(
+				self.device.assume_init(),
+				data_ptr,
+				data.len() as u32,
+				meta as *mut Struct_bladerf_metadata,
+				stream_timeout
+			);
+		
+			handle_res!(res)
+		}
+	}	
+
+	pub fn sync_rx(&self, data: &mut [Complex<i16>], stream_timeout: u32)
+		       -> Result<isize, isize> {
+		let data_ptr: *mut libc::c_void = data.as_ptr() as *mut libc::c_void;
+
+		unsafe {
+			let res = bladerf_sync_rx(
+				self.device.assume_init(),
+				data_ptr,
+				data.len() as u32,
+				ptr::null_mut(),
+				stream_timeout
+			);
+		
+			handle_res!(res)
 		}
 	}
 
@@ -697,6 +733,29 @@ impl BladeRFDevice {
 		}
 	}
 
+	/*
+    pub fn bladerf_get_bias_tee(dev: *mut Struct_bladerf,
+		module: bladerf_module,
+		enable: *mut bool) -> ::libc::c_int;
+	pub fn bladerf_set_bias_tee(dev: *mut Struct_bladerf,
+			module: bladerf_module,
+			enable: bool) -> ::libc::c_int;
+	*/
+
+	pub fn get_bias_tee(&self, module: bladerf_module) -> Result<bool, isize>  {
+		unsafe {
+			let mut value = false;
+			let res = bladerf_get_bias_tee(self.device.assume_init(), module, &mut value);
+			handle_res!(res, value)
+		}
+	}
+
+	pub fn set_bias_tee(&self, module: bladerf_module, enable: bool) -> Result<isize, isize> {
+		unsafe {
+			let res = bladerf_set_bias_tee(self.device.assume_init(), module, enable);
+			handle_res!(res)
+		}
+	}	
 
 	// Higher level control
 	pub fn configure_module(&self, module: bladerf_module, config: BladeRFModuleConfig) {
@@ -797,18 +856,18 @@ mod tests {
 
 		// Check initial is none
 		let loopback = device.get_loopback().unwrap();
-		assert!(loopback == bladerf_loopback::BLADERF_LB_NONE);
+		assert!(loopback == bladerf_loopback::NONE);
 
 		// Set and check loopback modes
-		device.set_loopback(bladerf_loopback::BLADERF_LB_FIRMWARE).unwrap();
+		device.set_loopback(bladerf_loopback::FIRMWARE).unwrap();
 		let loopback = device.get_loopback().unwrap();
-		assert!(loopback == bladerf_loopback::BLADERF_LB_FIRMWARE);
+		assert!(loopback == bladerf_loopback::FIRMWARE);
 
 		// Reset
-		device.set_loopback(bladerf_loopback::BLADERF_LB_NONE).unwrap();
+		device.set_loopback(bladerf_loopback::NONE).unwrap();
 
 		let loopback = device.get_loopback().unwrap();
-		assert!(loopback == bladerf_loopback::BLADERF_LB_NONE);
+		assert!(loopback == bladerf_loopback::NONE);
 	}
 
 	#[test]
@@ -818,8 +877,8 @@ mod tests {
 		let freq: u64 = 915000000;
 
 		// Set and check frequency
-		device.set_frequency(bladerf_module::BLADERF_MODULE_RX, freq).unwrap();
-		let actual_freq = device.get_frequency(bladerf_module::BLADERF_MODULE_RX).unwrap();
+		device.set_frequency(bladerf_module::RX0, freq).unwrap();
+		let actual_freq = device.get_frequency(bladerf_module::RX0).unwrap();
 		let diff = freq as i64 - actual_freq as i64;
 		assert!(i64::abs(diff) < 10);
 	}
@@ -828,7 +887,7 @@ mod tests {
 	fn test_set_sampling() {
 		let device = super::open(None).unwrap();
 
-		let sampling: bladerf_sampling = bladerf_sampling::BLADERF_SAMPLING_INTERNAL;
+		let sampling: bladerf_sampling = bladerf_sampling::INTERNAL;
 
 		// Set and check frequency
 		match device.set_sampling(sampling) {
