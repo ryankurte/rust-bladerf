@@ -12,8 +12,5 @@ edition = "2021"
 
 
 [build-dependencies]
-bindgen = "*"
-
-[dev-dependencies]
-nextest = "*"
+bindgen = "0.70.1"
 
