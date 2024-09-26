@@ -1,0 +1,19 @@
+[package]
+name = "bladerf-sys"
+repository = "https://github.com/ryankurte/rust-bladerf"
+description = "WIP Rust wrapper for libbladerf"
+authors = ["Ryan Kurte <ryankurte@gmail.com>"]
+readme = "README.md"
+license = "MIT"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+
+[build-dependencies]
+bindgen = "*"
+
+[dev-dependencies]
+nextest = "*"
+

@@ -1,13 +1,20 @@
 [package]
 name = "bladerf"
-version = "0.1.0"
-
 repository = "https://github.com/ryankurte/rust-bladerf"
 authors = ["Ryan Kurte <ryankurte@gmail.com>"]
-
 description = "WIP Rust wrapper for libbladerf"
 readme = "README.md"
 license = "MIT"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+members = [ ".", "sys" ]
+
+[dependencies]
+libc = "0.1.10"
+num-complex = "0.4.6"
+bladerf-sys = "0.1.0"
 
 [lib]
 name = "bladerf"
@@ -17,6 +24,7 @@ path = "src/lib.rs"
 name = "bladerf"
 path = "src/bin.rs"
 
-[dependencies]
-libc = "0.1.10"
-num-complex = "0.4.6"
+
+[patch.crates-io]
+bladerf-sys = { path = "./sys" }
+
