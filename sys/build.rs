@@ -7,7 +7,7 @@ fn main() {
     // Link shared library
     println!("cargo:rustc-link-lib=bladerf");
 
-    let bindings = bindgen::Builder::default()
+    let bindings = Builder::default()
         .header("wrapper.h")
         .allowlist_item("(bladerf|BLADERF).*")
         .generate()
