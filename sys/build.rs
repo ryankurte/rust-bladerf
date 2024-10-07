@@ -5,7 +5,7 @@ use bindgen::Builder;
 
 fn main() {
     // Link shared library
-    println!("cargo:rustc-link-lib=bladerf");
+    println!("cargo:rustc-link-lib=bladeRF");
 
     let bindings = Builder::default()
         .header("wrapper.h")
