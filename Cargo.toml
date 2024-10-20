@@ -9,7 +9,7 @@ version = "0.1.2"
 edition = "2021"
 
 [workspace]
-members = [ ".", "sys" ]
+members = [".", "sys"]
 
 [dependencies]
 libc = "0.1.10"
@@ -28,3 +28,5 @@ path = "src/bin.rs"
 [patch.crates-io]
 bladerf-sys = { path = "./sys" }
 
+[features]
+unimplemented = []
