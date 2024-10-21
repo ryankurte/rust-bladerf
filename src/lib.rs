@@ -102,6 +102,8 @@ impl TryFrom<bladerf_loopback> for BladeRFLoopback {
 
 impl Drop for BladeRF {
     fn drop(&mut self) {
+        // Safety: the open functions will initialize self.device
+        //    and make it null or a valid pointer.
         unsafe { bladerf_close(self.device.assume_init()) }
     }
 }
@@ -117,11 +119,17 @@ impl BladeRF {
     pub fn get_device_list() -> Result<Vec<bladerf_devinfo>, isize> {
         let mut devices = MaybeUninit::<*mut bladerf_devinfo>::uninit();
 
+        // Safety: This function is responsible for initializing the devices pointer
+        // It will return n>0 if initialized.
+        // https://github.com/Nuand/bladeRF/blob/fe3304d75967c88ab4f17ff37cb5daf8ff53d3e1/host/libraries/libbladeRF/src/devinfo.c#L58
+        // Does this memory only need to be freed if it is sucessfully initialized?
         let n = unsafe { bladerf_get_device_list(devices.as_mut_ptr()) as isize };
 
         // Catch bladerf function errors
         if n > 0 {
             // Cast array to slice and create a safe array to return
+            // Safety: I think this is and will cause UB (out of bounds access) for anything beyond a single device.
+            //  the get_device_list seems to populate an "array" of pointers to bladerf_devinfo
             let device_slice = unsafe { std::slice::from_raw_parts(*devices.as_ptr(), n as usize) };
             let mut safe_device_list: Vec<bladerf_devinfo> = Vec::new();
 
@@ -146,6 +154,9 @@ impl BladeRF {
             device: MaybeUninit::uninit(),
         };
 
+        // Safety: This function is responsible for initializing the device pointer.
+        // https://github.com/Nuand/bladeRF/blob/fe3304d75967c88ab4f17ff37cb5daf8ff53d3e1/host/libraries/libbladeRF/src/bladerf.c#L94
+        // It will either assign it null or a valid pointer
         let res = match identifier {
             Some(id) => {
                 let c_string = ffi::CString::new(id).unwrap();
@@ -165,6 +176,9 @@ impl BladeRF {
             device: MaybeUninit::uninit(),
         };
 
+        // Safety: This function is responsible for initializing the device pointer.
+        // https://github.com/Nuand/bladeRF/blob/fe3304d75967c88ab4f17ff37cb5daf8ff53d3e1/host/libraries/libbladeRF/src/bladerf.c#L110
+        // It will either assign it null or a valid pointer
         let res =
             unsafe { bladerf_open_with_devinfo(bladerf_device.device.as_mut_ptr(), devinfo_ptr) };
 
@@ -174,11 +188,16 @@ impl BladeRF {
     // Device Properties and Information
     // http://www.nuand.com/libbladeRF-doc/v1.7.2/group___f_n___i_n_f_o.html
 
+    /// Gets the serial number of the BladeRF
     pub fn get_serial(&self) -> Result<String, isize> {
         // Create raw data array for serial return
         let mut serial_data: Vec<::libc::c_char> = vec![0; 33];
 
         // Call underlying c method
+        // Safety: This method will be called on a pointer that is initialized with a valid pointer (wont be null either)
+        // We should use a type to better enforce this.
+        // serial_data is expected to be a slice of length 33.
+        // This function is depricated, in favor of bladerf_get_serial_struct()?
         let res =
             unsafe { bladerf_get_serial(self.device.assume_init(), serial_data.as_mut_ptr()) };
 
@@ -187,6 +206,9 @@ impl BladeRF {
             let serial_u8: Vec<u8> = serial_data.iter().map(|&x| x as u8).collect();
 
             // Build String
+            // Safety: it is unclear if if the vector will actually be null terminated
+            //   it is initialized it with zeros,
+            //   so I presume that this function will only write up to 32 characters and not touch the last value.
             let serial_cstr = unsafe { ffi::CString::from_vec_unchecked(serial_u8) };
             let serial_str = serial_cstr.into_string().unwrap();
 
