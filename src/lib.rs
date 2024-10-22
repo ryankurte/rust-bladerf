@@ -6,6 +6,7 @@
 use std::mem::*;
 use std::*;
 
+use cmp::Ordering;
 use num_complex::Complex;
 
 use bladerf_sys::*;
@@ -217,7 +218,7 @@ impl BladeRF {
                 major: 0,
                 minor: 0,
                 patch: 0,
-                describe: 0 as *const i8,
+                describe: std::ptr::null::<i8>(),
             };
 
             let res = bladerf_fw_version(self.device.assume_init(), &mut version);
@@ -230,12 +231,10 @@ impl BladeRF {
         unsafe {
             let res = bladerf_is_fpga_configured(self.device.assume_init());
 
-            if res > 0 {
-                Ok(true)
-            } else if res == 0 {
-                Ok(false)
-            } else {
-                Err(res as isize)
+            match res.cmp(&0) {
+                Ordering::Greater => Ok(true),
+                Ordering::Equal => Ok(false),
+                Ordering::Less => Err(res as isize),
             }
         }
     }
@@ -246,7 +245,7 @@ impl BladeRF {
                 major: 0,
                 minor: 0,
                 patch: 0,
-                describe: 0 as *const i8,
+                describe: std::ptr::null::<i8>(),
             };
 
             let res = bladerf_fpga_version(self.device.assume_init(), &mut version);
@@ -686,10 +685,7 @@ impl BladeRF {
         num_transfers: Option<u32>,
         stream_timeout: u32,
     ) -> Result<isize, isize> {
-        let num_transfers = match num_transfers {
-            Some(t) => t,
-            None => 4,
-        };
+        let num_transfers = num_transfers.unwrap_or(4);
 
         unsafe {
             let res = bladerf_sync_config(
@@ -860,14 +856,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_list_devices() {
+    fn test_list_devices() -> Result<(), isize> {
         match BladeRF::get_device_list() {
             Ok(devices) => {
                 println!("Discovered {:?} devices", devices.len());
+                Ok(())
             }
             Err(code) => {
                 println!("Error {:?} listing devices", code);
-                assert!(false);
+                Err(code)
             }
         }
     }
@@ -880,7 +877,7 @@ mod tests {
     #[test]
     fn test_open_devinfo() {
         let devices = BladeRF::get_device_list().unwrap();
-        assert!(devices.len() != 0);
+        assert!(!devices.is_empty());
         let _device = BladeRF::open_with_devinfo(devices[0]).unwrap();
     }
 
@@ -914,7 +911,7 @@ mod tests {
         let device = BladeRF::open(None).unwrap();
 
         let loaded = device.is_fpga_configured().unwrap();
-        assert_eq!(true, loaded);
+        assert!(loaded);
     }
 
     #[test]
