@@ -130,15 +130,16 @@ impl BladeRF {
         // Catch bladerf function errors
         if n > 0 {
             // Cast array to slice and create a safe array to return
-            // Safety: I think this is and will cause UB (out of bounds access) for anything beyond a single device.
-            //  the get_device_list seems to populate an "array" of pointers to bladerf_devinfo
-            let device_slice = unsafe { std::slice::from_raw_parts(*devices.as_ptr(), n as usize) };
+            // Safety: Should have a valid pointer of length n. n is <0 if the pointer is invalid.
+            // What about n=0?
+            // https://github.com/Nuand/bladeRF/blob/fe3304d75967c88ab4f17ff37cb5daf8ff53d3e1/host/libraries/libbladeRF/src/devinfo.c#L58
+            let device_slice = unsafe { std::slice::from_raw_parts(devices.as_ptr(), n as usize) };
             let mut safe_device_list: Vec<bladerf_devinfo> = Vec::new();
 
-            for i in 0..n {
-                let local_device = device_slice[i as usize];
-                //Safe if this is a copy, unsafe if it is not?
-                safe_device_list.push(local_device);
+            for info_ptr in device_slice.iter().copied() {
+                // Safety: This should be a valid pointer that lives untill we free the device list.
+                // We are copying it into a vector.
+                safe_device_list.push(unsafe { *info_ptr });
             }
             unsafe { bladerf_free_device_list(*devices.as_ptr()) };
 
