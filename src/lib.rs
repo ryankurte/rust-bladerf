@@ -11,6 +11,8 @@ use num_complex::Complex;
 
 use bladerf_sys::*;
 
+pub mod error;
+
 // Macro to simplify integer returns
 macro_rules! handle_res {
     ($e:expr) => (
